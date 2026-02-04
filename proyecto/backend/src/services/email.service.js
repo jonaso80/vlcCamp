@@ -6,6 +6,8 @@ import { Resend } from 'resend';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || 'onboarding@resend.dev';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const BACKEND_PUBLIC_URL = process.env.BACKEND_PUBLIC_URL || 'http://localhost:4000';
 
 // Inicializar cliente de Resend
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
@@ -108,6 +110,8 @@ export const sendCampRegistrationEmail = async (email, campName, contactName = '
 
   console.log('📧 Intentando enviar email de confirmación de registro de campamento a:', email);
 
+  const confirmUrl = `${BACKEND_PUBLIC_URL.replace(/\/$/, '')}/api/camps/confirm-registration?email=${encodeURIComponent(email)}`;
+
   try {
     const { data, error } = await resend.emails.send({
       from: `vlcCamp <${RESEND_FROM_EMAIL}>`,
@@ -124,6 +128,9 @@ export const sendCampRegistrationEmail = async (email, campName, contactName = '
             .header { background: linear-gradient(135deg, #8EB8BA 0%, #B2DFDB 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .header h1 { color: white; margin: 0; font-size: 28px; }
             .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .thanks { font-size: 18px; color: #2E4053; margin: 24px 0 16px; font-weight: 600; }
+            .cta-wrap { text-align: center; margin: 28px 0; }
+            .cta { display: inline-block; padding: 14px 28px; background: #2E4053; color: #fff !important; text-decoration: none; border-radius: 8px; font-weight: 600; }
             .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
           </style>
         </head>
@@ -135,8 +142,12 @@ export const sendCampRegistrationEmail = async (email, campName, contactName = '
             <div class="content">
               <h2>¡Registro recibido${contactName ? ` ${contactName}` : ''}!</h2>
               <p>Hemos recibido tu solicitud de registro para el campamento <strong>${campName}</strong>.</p>
-              <p>Nuestro equipo revisará tu solicitud y te contactaremos pronto con más información.</p>
-              <p>Gracias por confiar en vlcCamp.</p>
+              <p class="thanks">Gracias por confiar en vlcCamp.</p>
+              <p>Para validar tu registro, pulsa el botón siguiente. Después podrás volver a la web de vlcCamp y acceder al perfil de tu campamento desde el apartado <strong>Cuenta</strong> (arriba en el menú).</p>
+              <div class="cta-wrap">
+                <a href="${confirmUrl}" class="cta">Confirmar</a>
+              </div>
+              <p style="font-size: 14px; color: #666;">Si tienes cualquier duda, responde a este correo y te ayudaremos.</p>
               <div class="footer">
                 <p>© ${new Date().getFullYear()} vlcCamp. Todos los derechos reservados.</p>
               </div>

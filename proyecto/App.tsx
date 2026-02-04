@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camp, FormData, DateRange, View, User, UserReview } from './types';
+import { Camp, FormData, DateRange, View, User, UserReview, MyCamp } from './types';
 // Los campamentos se cargarán desde Supabase cuando estén contratados
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -16,6 +16,7 @@ import Chatbot from './components/chatbot/Chatbot';
 import ChatbotFab from './components/chatbot/ChatbotFab';
 import CampRegistrationModal, { CampFormData } from './components/CampRegistrationModal';
 import CampRegistrationSuccessPage from './components/CampRegistrationSuccessPage';
+import MyCampProfilePage from './components/MyCampProfilePage';
 import { useTranslations } from './context/LanguageContext';
 import { logEvent } from './utils/logging';
 import { supabase } from './supabaseClient';
@@ -55,8 +56,57 @@ const App: React.FC = () => {
   const [isCampRegistrationModalOpen, setIsCampRegistrationModalOpen] = useState(false);
   const [pendingCampRegistration, setPendingCampRegistration] = useState(false);
   const [lastCampRegistration, setLastCampRegistration] = useState<CampFormData | null>(null);
+  const [userCamp, setUserCamp] = useState<MyCamp | null>(null);
+  const [showConfirmadoMessage, setShowConfirmadoMessage] = useState(false);
   const { t } = useTranslations();
   const [authInitialView, setAuthInitialView] = useState<'login' | 'signup'>('signup');
+
+  // Mostrar mensaje "Gracias por confirmar" cuando llegan desde el enlace del correo (#confirmado)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#confirmado')) {
+      setShowConfirmadoMessage(true);
+    }
+  }, []);
+
+  // Si el usuario ya está logueado al confirmar, refrescar su campamento para que aparezca "Mi campamento"
+  useEffect(() => {
+    if (!showConfirmadoMessage || !currentUser?.email) return;
+    const refetch = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/camps/my-camp?email=${encodeURIComponent(currentUser.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setUserCamp(data);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    refetch();
+  }, [showConfirmadoMessage, currentUser?.email]);
+
+  // Cargar el campamento del usuario cuando está autenticado
+  useEffect(() => {
+    if (!currentUser?.email) {
+      setUserCamp(null);
+      return;
+    }
+    const loadMyCamp = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/camps/my-camp?email=${encodeURIComponent(currentUser.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setUserCamp(data);
+        } else {
+          setUserCamp(null);
+        }
+      } catch {
+        setUserCamp(null);
+      }
+    };
+    loadMyCamp();
+  }, [currentUser?.email]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -400,6 +450,7 @@ const App: React.FC = () => {
     logEvent('logout', { user: currentUser?.name, email: currentUser?.email });
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setUserCamp(null);
     setCurrentView('home');
     setSelectedCamp(null);
   };
@@ -585,6 +636,13 @@ const App: React.FC = () => {
             }}
           />
         );
+      case 'my-camp-profile':
+        return userCamp ? (
+          <MyCampProfilePage
+            camp={userCamp}
+            onBackToAccount={() => setCurrentView('account')}
+          />
+        ) : null;
       case 'coming-soon':
         return <ComingSoonPage />;
       case 'contact':
@@ -607,11 +665,35 @@ const App: React.FC = () => {
         onSwitchAccount={handleSwitchAccount}
         onCommunityClick={handleCommunityClick}
         onContactClick={handleContactClick}
+        userCamp={userCamp}
+        onMyCampClick={() => setCurrentView('my-camp-profile')}
       />
       <main className="container mx-auto px-4 py-8 flex-grow">
         {renderContent()}
       </main>
       <Footer onHomeClick={() => setCurrentView('home')} onAuthClick={handleShowAuth} onContactClick={handleContactClick} />
+      {showConfirmadoMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+            <h2 className="text-xl font-bold text-[#2E4053] mb-3">Gracias por confirmar</h2>
+            <p className="text-slate-600 mb-6">
+              Puedes volver a la web de vlcCamp y acceder al perfil de tu campamento desde el apartado <strong>Cuenta</strong>, arriba en el menú del header.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowConfirmadoMessage(false);
+                if (window.location.hash) {
+                  window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+              }}
+              className="px-6 py-3 bg-[#2E4053] text-white rounded-full font-medium hover:bg-[#3d5a6e] transition-colors"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
       {currentView === 'auth' && <AuthPage onClose={handleCloseAuth} onRegister={handleRegister} onLogin={handleLogin} onGoogleLogin={handleGoogleLogin} initialView={authInitialView} />}
       <CampRegistrationModal 
         isOpen={isCampRegistrationModalOpen} 

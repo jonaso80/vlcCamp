@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { getAllCamps } from '../services/camps.service.js';
+import { getAllCamps, confirmCampByEmail, getCampByUserEmail } from '../services/camps.service.js';
 import { sendCampRegistrationEmail } from '../services/email.service.js';
 
 const router = Router();
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 router.get('/', async (req, res) => {
   try {
@@ -88,6 +89,46 @@ router.post('/send-registration-confirmation', async (req, res) => {
       error: error.message || 'Error desconocido',
       warning: error.message || 'Error desconocido'
     });
+  }
+});
+
+/**
+ * GET /api/camps/confirm-registration?email=xxx
+ * Valida la confirmación del campamento (cuando el usuario pulsa "Confirmar" en el correo).
+ * Actualiza status a 'confirmed' y redirige al frontend con #confirmado.
+ */
+router.get('/confirm-registration', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email || typeof email !== 'string') {
+      return res.redirect(`${FRONTEND_URL}#confirmado?error=missing`);
+    }
+    const camp = await confirmCampByEmail(email);
+    if (!camp) {
+      return res.redirect(`${FRONTEND_URL}#confirmado?error=notfound`);
+    }
+    return res.redirect(`${FRONTEND_URL}#confirmado`);
+  } catch (error) {
+    console.error('❌ [BACKEND] Error en confirm-registration:', error);
+    return res.redirect(`${FRONTEND_URL}#confirmado?error=server`);
+  }
+});
+
+/**
+ * GET /api/camps/my-camp?email=xxx
+ * Devuelve el campamento del usuario (contact_email o user_email) con status confirmed.
+ */
+router.get('/my-camp', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'email es requerido' });
+    }
+    const camp = await getCampByUserEmail(email);
+    return res.json(camp || null);
+  } catch (error) {
+    console.error('Error al obtener mi campamento:', error);
+    res.status(500).json({ error: 'Error al obtener el campamento' });
   }
 });
 
