@@ -667,6 +667,7 @@ const App: React.FC = () => {
         onContactClick={handleContactClick}
         userCamp={userCamp}
         onMyCampClick={() => setCurrentView('my-camp-profile')}
+        currentView={currentView}
       />
       <main className="container mx-auto px-4 py-8 flex-grow">
         {renderContent()}
