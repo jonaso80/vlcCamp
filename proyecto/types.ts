@@ -47,7 +47,22 @@ export type View =
   | 'coming-soon'
   | 'community'
   | 'contact'
-  | 'camp-registration-success';
+  | 'camp-registration-success'
+  | 'my-camp-profile';
+
+/** Campamento del usuario (registrado y confirmado por email). Respuesta de GET /api/camps/my-camp */
+export interface MyCamp {
+  id: number;
+  name: string;
+  location: string;
+  description: string;
+  contact_phone: string;
+  contact_email: string;
+  plan: string;
+  user_email: string | null;
+  status: string;
+  created_at?: string;
+}
 
 export interface User {
   name: string;

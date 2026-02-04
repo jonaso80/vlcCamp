@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Logo from './Logo';
 import { EditIcon, SwitchUserIcon, LogoutIcon, UserIcon } from './icons/Icons';
 import { useTranslations } from '../context/LanguageContext';
-import { User } from '../types';
+import { User, MyCamp } from '../types';
 
 interface HeaderProps {
   onHomeClick: () => void;
@@ -16,7 +16,7 @@ interface HeaderProps {
   onContactClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick }) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -77,6 +77,11 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
           <Logo width={40} height={40} />
         </div>
         <nav className="flex items-center space-x-4 md:space-x-6 text-slate-600">
+          {userCamp && (
+            <button onClick={onMyCampClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title="Perfil de tu campamento">
+              Mi campamento
+            </button>
+          )}
           <button onClick={onHomeClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('footer.home')}>
             Inicio
           </button>
