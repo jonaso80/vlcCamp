@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Lora:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Lora:wght@400;700&family=Poppins:wght@300;400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
       body {
         font-family: 'Poppins', sans-serif;
@@ -16,8 +16,35 @@
       .font-brand {
         font-family: 'Dancing Script', cursive;
       }
-      .font-serif {
-        font-family: 'Lora', serif;
+      .font-hero {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 300;
+        letter-spacing: 0.08em;
+      }
+      .stroke-animation {
+        color: #2E4053;
+        -webkit-text-fill-color: #2E4053;
+        -webkit-text-stroke: 1px rgba(46, 64, 83, 0.25);
+        animation: stroke-pulse 3s ease-in-out infinite;
+        transition: transform 0.4s ease, letter-spacing 0.4s ease, -webkit-text-stroke 0.4s ease;
+      }
+      .stroke-animation:hover {
+        -webkit-text-stroke: 1px rgba(46, 64, 83, 0.5);
+        transform: scale(1.02);
+        letter-spacing: 0.12em;
+      }
+      @keyframes stroke-pulse {
+        0%, 100% { -webkit-text-stroke: 1px rgba(46, 64, 83, 0.2); }
+        50% { -webkit-text-stroke: 1px rgba(46, 64, 83, 0.4); }
+      }
+      .reveal-from-left {
+        clip-path: inset(0 100% 0 0);
+        animation: reveal-from-left 5s ease-out forwards;
+      }
+      @keyframes reveal-from-left {
+        to {
+          clip-path: inset(0 0 0 0);
+        }
       }
     </style>
   <script type="importmap">
