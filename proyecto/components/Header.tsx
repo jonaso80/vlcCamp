@@ -88,13 +88,6 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
           </button>
           <div className="relative" ref={userMenuRef}>
             <button onClick={handleUserIconClick} className="flex items-center gap-2 hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('account.title')}>
-<<<<<<< HEAD
-              <span className={isAuthenticated && currentUser?.name ? 'normal-case' : ''}>
-                {isAuthenticated && currentUser?.name ? currentUser.name : 'Mi cuenta'}
-=======
-              <span className="flex-shrink-0 inline-flex [&_svg]:h-5 [&_svg]:w-5" aria-hidden>
-                <UserIcon />
-              </span>
               <span className={isAuthenticated && currentUser?.name && !userCamp ? 'normal-case' : ''}>
                 {!isAuthenticated
                   ? 'Mi cuenta'
@@ -103,7 +96,6 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
                       ? 'Cuenta campamento'
                       : 'Cuenta personal'
                     : currentUser?.name ?? 'Mi cuenta'}
->>>>>>> af24d64ad05305d9d0a7fd10597ff1e64ae39f85
               </span>
             </button>
             {isAuthenticated && isUserMenuOpen && (
