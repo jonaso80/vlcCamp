@@ -5,15 +5,15 @@ import { useTranslations } from '../context/LanguageContext';
 import { User } from '../types';
 
 interface HeaderProps {
-    onHomeClick: () => void;
-    onAuthClick: () => void;
-    isAuthenticated: boolean;
-    currentUser: User | null;
-    onLogout: () => void;
-    onAccountClick: () => void;
-    onSwitchAccount: () => void;
-    onCommunityClick: () => void;
-    onContactClick: () => void;
+  onHomeClick: () => void;
+  onAuthClick: () => void;
+  isAuthenticated: boolean;
+  currentUser: User | null;
+  onLogout: () => void;
+  onAccountClick: () => void;
+  onSwitchAccount: () => void;
+  onCommunityClick: () => void;
+  onContactClick: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick }) => {
@@ -66,32 +66,28 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
   };
 
   return (
-    <header 
-      className={`sticky top-0 z-40 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/70 backdrop-blur-lg shadow-lg border-b border-white/20' 
-          : 'bg-white/30 backdrop-blur-sm shadow-md'
-      }`}
+    <header
+      className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled
+        ? 'bg-white/70 backdrop-blur-lg shadow-lg border-b border-white/20'
+        : 'bg-white/30 backdrop-blur-sm shadow-md'
+        }`}
     >
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <div className="cursor-pointer" onClick={onHomeClick}>
-           <Logo width={40} height={40}/>
+          <Logo width={40} height={40} />
         </div>
         <nav className="flex items-center space-x-4 md:space-x-6 text-slate-600">
           <button onClick={onHomeClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('footer.home')}>
             Inicio
           </button>
-          <button onClick={onCommunityClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('header.community')}>
+          <a href="http://localhost:3001/" className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('header.community')}>
             Comunidad
-          </button>
+          </a>
           <button onClick={onContactClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('footer.contact')}>
             Contacto
           </button>
           <div className="relative" ref={userMenuRef}>
             <button onClick={handleUserIconClick} className="flex items-center gap-2 hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('account.title')}>
-              <span className="flex-shrink-0 inline-flex [&_svg]:h-5 [&_svg]:w-5" aria-hidden>
-                <UserIcon />
-              </span>
               <span className={isAuthenticated && currentUser?.name ? 'normal-case' : ''}>
                 {isAuthenticated && currentUser?.name ? currentUser.name : 'Mi cuenta'}
               </span>
@@ -105,7 +101,7 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
                   <SwitchUserIcon /> {t('header.switchAccount')}
                 </button>
                 <button onClick={() => { onLogout(); setIsUserMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
-                 <LogoutIcon /> {t('header.logout')}
+                  <LogoutIcon /> {t('header.logout')}
                 </button>
               </div>
             )}
@@ -118,16 +114,15 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
               </svg>
             </button>
             {isLangMenuOpen && (
-               <div className="absolute right-0 mt-2 w-28 bg-white/90 backdrop-blur-md rounded-xl shadow-xl py-1 z-50 animate-fade-in-fast border border-white/50">
+              <div className="absolute right-0 mt-2 w-28 bg-white/90 backdrop-blur-md rounded-xl shadow-xl py-1 z-50 animate-fade-in-fast border border-white/50">
                 {(Object.keys(languages) as Array<keyof typeof languages>).map((key) => (
-                  <button 
-                    key={key} 
-                    onClick={() => handleLangChange(key)} 
-                    className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
-                      lang === key 
-                        ? 'bg-[#def1f0] text-[#2E4053] font-semibold' 
-                        : 'text-slate-700 hover:bg-[#def1f0]'
-                    }`}
+                  <button
+                    key={key}
+                    onClick={() => handleLangChange(key)}
+                    className={`block w-full text-left px-4 py-2 text-sm transition-colors ${lang === key
+                      ? 'bg-[#def1f0] text-[#2E4053] font-semibold'
+                      : 'text-slate-700 hover:bg-[#def1f0]'
+                      }`}
                   >
                     {languages[key]}
                   </button>
