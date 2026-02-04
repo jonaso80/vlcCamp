@@ -71,7 +71,7 @@ const HomePage: React.FC<HomePageProps> = ({ clientCamps, onSelectCamp, onCampRe
     <div className="space-y-20">
       {/* Hero Section - Sin logo redundante */}
       <AnimatedSection className="text-center py-16">
-        <h1 className="text-6xl md:text-8xl font-brand text-[#2E4053] mb-6 drop-shadow-sm">
+        <h1 className="text-6xl md:text-8xl font-brand text-[#2E4053] mb-6 drop-shadow-sm lowercase reveal-from-left">
           {t('home.heroTitle')}
         </h1>
         <p className="text-2xl md:text-3xl text-slate-700 font-serif font-medium tracking-wide">
