@@ -16,9 +16,11 @@ interface HeaderProps {
     onContactClick: () => void;
     userCamp: MyCamp | null;
     onMyCampClick: () => void;
+    /** Vista actual para mostrar la opción activa (cuenta personal vs campamento) */
+    currentView: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick }) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick, currentView }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -80,11 +82,6 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
            <Logo width={40} height={40}/>
         </div>
         <nav className="flex items-center space-x-4 md:space-x-6 text-slate-600">
-          {userCamp && (
-            <button onClick={onMyCampClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title="Perfil de tu campamento">
-              Mi campamento
-            </button>
-          )}
           <button onClick={onHomeClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('footer.home')}>
             Inicio
           </button>
@@ -99,15 +96,34 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
               <span className="flex-shrink-0 inline-flex [&_svg]:h-5 [&_svg]:w-5" aria-hidden>
                 <UserIcon />
               </span>
-              <span className={isAuthenticated && currentUser?.name ? 'normal-case' : ''}>
-                {isAuthenticated && currentUser?.name ? currentUser.name : 'Mi cuenta'}
+              <span className={isAuthenticated && currentUser?.name && !userCamp ? 'normal-case' : ''}>
+                {!isAuthenticated
+                  ? 'Mi cuenta'
+                  : userCamp
+                    ? currentView === 'my-camp-profile'
+                      ? 'Cuenta campamento'
+                      : 'Cuenta personal'
+                    : currentUser?.name ?? 'Mi cuenta'}
               </span>
             </button>
             {isAuthenticated && isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-md rounded-xl shadow-xl py-1 z-50 animate-fade-in-fast border border-white/50">
-                <button onClick={() => { onAccountClick(); setIsUserMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-[#def1f0] flex items-center gap-2 transition-colors">
-                  <EditIcon /> {t('header.editAccount')}
-                </button>
+              <div className="absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-md rounded-xl shadow-xl py-1 z-50 animate-fade-in-fast border border-white/50">
+                {userCamp && (
+                  <>
+                    <button onClick={() => { onAccountClick(); setIsUserMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${currentView === 'account' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}>
+                      <span className="inline-flex [&_svg]:h-4 [&_svg]:w-4"><UserIcon /></span> Cuenta personal
+                    </button>
+                    <button onClick={() => { onMyCampClick(); setIsUserMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${currentView === 'my-camp-profile' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}>
+                      <span className="w-4 h-4 flex items-center justify-center text-base">🏕</span> Cuenta campamento
+                    </button>
+                    <div className="border-t border-slate-200 my-1" />
+                  </>
+                )}
+                {!userCamp && (
+                  <button onClick={() => { onAccountClick(); setIsUserMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-[#def1f0] flex items-center gap-2 transition-colors">
+                    <EditIcon /> {t('header.editAccount')}
+                  </button>
+                )}
                 <button onClick={() => { onSwitchAccount(); setIsUserMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-[#def1f0] flex items-center gap-2 transition-colors">
                   <SwitchUserIcon /> {t('header.switchAccount')}
                 </button>
