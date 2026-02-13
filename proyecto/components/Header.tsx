@@ -18,9 +18,10 @@ interface HeaderProps {
     onMyCampClick: () => void;
     /** Vista actual para mostrar la opción activa (cuenta personal vs campamento) */
     currentView: string;
+    onManagementClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick, currentView }) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick, currentView, onManagementClick }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -85,6 +86,14 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
           <button onClick={onHomeClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('footer.home')}>
             Inicio
           </button>
+          {isAuthenticated && (
+            <button
+              onClick={onManagementClick}
+              className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide"
+            >
+              Gestión
+            </button>
+          )}
           <button onClick={onCommunityClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('header.community')}>
             Comunidad
           </button>

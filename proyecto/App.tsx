@@ -17,6 +17,7 @@ import ChatbotFab from './components/chatbot/ChatbotFab';
 import CampRegistrationModal, { CampFormData } from './components/CampRegistrationModal';
 import CampRegistrationSuccessPage from './components/CampRegistrationSuccessPage';
 import MyCampProfilePage from './components/MyCampProfilePage';
+import ManagementPage from './components/ManagementPage';
 import { useTranslations } from './context/LanguageContext';
 import { logEvent } from './utils/logging';
 import { supabase } from './supabaseClient';
@@ -60,6 +61,14 @@ const App: React.FC = () => {
   const [showConfirmadoMessage, setShowConfirmadoMessage] = useState(false);
   const { t } = useTranslations();
   const [authInitialView, setAuthInitialView] = useState<'login' | 'signup'>('signup');
+
+  // Ajustar vista inicial según la URL (p.ej. /gestion)
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/gestion') {
+      setCurrentView('management');
+    }
+  }, []);
 
   // Mostrar mensaje "Gracias por confirmar" cuando llegan desde el enlace del correo (#confirmado)
   useEffect(() => {
@@ -186,6 +195,13 @@ const App: React.FC = () => {
   const handleContactClick = () => {
     setCurrentView('contact');
   }
+
+  const handleManagementClick = () => {
+    setCurrentView('management');
+    if (window.location.pathname !== '/gestion') {
+      window.history.pushState(null, '', '/gestion');
+    }
+  };
 
   const handleCampRegistrationClick = () => {
     if (isAuthenticated) {
@@ -647,6 +663,14 @@ const App: React.FC = () => {
         return <ComingSoonPage />;
       case 'contact':
         return <ContactPage />;
+      case 'management':
+        return (
+          <ManagementPage
+            isAuthenticated={isAuthenticated}
+            currentUser={currentUser}
+            userCamp={userCamp}
+          />
+        );
       case 'home':
       default:
         return <HomePage clientCamps={CLIENT_CAMPS} onSelectCamp={handleSelectCamp} onCampRegistrationClick={handleCampRegistrationClick} />;
@@ -668,6 +692,7 @@ const App: React.FC = () => {
         userCamp={userCamp}
         onMyCampClick={() => setCurrentView('my-camp-profile')}
         currentView={currentView}
+        onManagementClick={handleManagementClick}
       />
       <main className="container mx-auto px-4 py-8 flex-grow">
         {renderContent()}

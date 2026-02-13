@@ -40,7 +40,6 @@ export async function getCampByUserEmail(email) {
     .from('camps')
     .select('*')
     .eq('contact_email', email)
-    .eq('status', 'confirmed')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -52,7 +51,6 @@ export async function getCampByUserEmail(email) {
     .from('camps')
     .select('*')
     .eq('user_email', email)
-    .eq('status', 'confirmed')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();

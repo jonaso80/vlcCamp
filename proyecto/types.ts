@@ -48,7 +48,8 @@ export type View =
   | 'community'
   | 'contact'
   | 'camp-registration-success'
-  | 'my-camp-profile';
+  | 'my-camp-profile'
+  | 'management';
 
 /** Campamento del usuario (registrado y confirmado por email). Respuesta de GET /api/camps/my-camp */
 export interface MyCamp {
