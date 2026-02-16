@@ -1,6 +1,24 @@
 import { Router } from 'express';
-import { getAllCamps, confirmCampByEmail, getCampByUserEmail } from '../services/camps.service.js';
+import {
+  getAllCamps,
+  confirmCampByEmail,
+  getCampByUserEmail,
+  getPublishedCamps,
+  getCampPublicPage,
+  updateCampPublicidad,
+  updateCampExtra,
+} from '../services/camps.service.js';
 import { sendCampRegistrationEmail } from '../services/email.service.js';
+import {
+  getChildrenByCampId,
+  createChild,
+  updateChild,
+  deleteChild,
+  getActivitiesByCampId,
+  createActivity,
+  updateActivity,
+  deleteActivity,
+} from '../services/tablas.service.js';
 
 const router = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -129,6 +147,198 @@ router.get('/my-camp', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener mi campamento:', error);
     res.status(500).json({ error: 'Error al obtener el campamento' });
+  }
+});
+
+/**
+ * GET /api/camps/public
+ * Lista campamentos con publicidad publicada (para la sección "Campamentos que confían en nosotros").
+ */
+router.get('/public', async (req, res) => {
+  try {
+    const camps = await getPublishedCamps();
+    return res.json(camps);
+  } catch (error) {
+    console.error('Error al obtener campamentos publicados:', error);
+    res.status(500).json({ error: 'Error al obtener campamentos' });
+  }
+});
+
+/**
+ * Niños: GET /api/camps/:id/children
+ */
+router.get('/:id/children', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'id inválido' });
+    const list = await getChildrenByCampId(id);
+    return res.json(list);
+  } catch (error) {
+    console.error('Error al listar niños:', error);
+    res.status(500).json({ error: 'Error al obtener niños' });
+  }
+});
+
+router.post('/:id/children', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'id inválido' });
+    const child = await createChild(id, req.body || {});
+    return res.status(201).json(child);
+  } catch (error) {
+    console.error('Error al crear niño:', error);
+    res.status(500).json({ error: 'Error al crear' });
+  }
+});
+
+router.patch('/:id/children/:childId', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const childId = parseInt(req.params.childId, 10);
+    if (Number.isNaN(id) || Number.isNaN(childId)) return res.status(400).json({ error: 'id inválido' });
+    const child = await updateChild(id, childId, req.body || {});
+    return res.json(child);
+  } catch (error) {
+    console.error('Error al actualizar niño:', error);
+    res.status(500).json({ error: 'Error al actualizar' });
+  }
+});
+
+router.delete('/:id/children/:childId', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const childId = parseInt(req.params.childId, 10);
+    if (Number.isNaN(id) || Number.isNaN(childId)) return res.status(400).json({ error: 'id inválido' });
+    await deleteChild(id, childId);
+    return res.status(204).send();
+  } catch (error) {
+    console.error('Error al eliminar niño:', error);
+    res.status(500).json({ error: 'Error al eliminar' });
+  }
+});
+
+/**
+ * Actividades: GET /api/camps/:id/activities
+ */
+router.get('/:id/activities', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'id inválido' });
+    const list = await getActivitiesByCampId(id);
+    return res.json(list);
+  } catch (error) {
+    console.error('Error al listar actividades:', error);
+    res.status(500).json({ error: 'Error al obtener actividades' });
+  }
+});
+
+router.post('/:id/activities', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'id inválido' });
+    const activity = await createActivity(id, req.body || {});
+    return res.status(201).json(activity);
+  } catch (error) {
+    console.error('Error al crear actividad:', error);
+    res.status(500).json({ error: 'Error al crear' });
+  }
+});
+
+router.patch('/:id/activities/:activityId', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const activityId = parseInt(req.params.activityId, 10);
+    if (Number.isNaN(id) || Number.isNaN(activityId)) return res.status(400).json({ error: 'id inválido' });
+    const activity = await updateActivity(id, activityId, req.body || {});
+    return res.json(activity);
+  } catch (error) {
+    console.error('Error al actualizar actividad:', error);
+    res.status(500).json({ error: 'Error al actualizar' });
+  }
+});
+
+router.delete('/:id/activities/:activityId', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const activityId = parseInt(req.params.activityId, 10);
+    if (Number.isNaN(id) || Number.isNaN(activityId)) return res.status(400).json({ error: 'id inválido' });
+    await deleteActivity(id, activityId);
+    return res.status(204).send();
+  } catch (error) {
+    console.error('Error al eliminar actividad:', error);
+    res.status(500).json({ error: 'Error al eliminar' });
+  }
+});
+
+/**
+ * GET /api/camps/:id/public
+ * Página pública de un campamento (para /camp/:id).
+ */
+router.get('/:id/public', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+    const camp = await getCampPublicPage(id);
+    if (!camp) return res.status(404).json({ error: 'Campamento no encontrado' });
+    return res.json(camp);
+  } catch (error) {
+    console.error('Error al obtener página pública:', error);
+    res.status(500).json({ error: 'Error al obtener el campamento' });
+  }
+});
+
+/**
+ * POST /api/camps/:id/publicidad
+ * Guarda la plantilla de publicidad y publica el campamento.
+ * Body: { paletteId, title, bodyText, contactEmail, contactPhone, images: string[] }
+ */
+router.post('/:id/publicidad', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+    const body = req.body || {};
+    const publicidadData = {
+      paletteId: body.paletteId ?? 'verde',
+      title: body.title ?? '',
+      bodyText: body.bodyText ?? '',
+      contactEmail: body.contactEmail ?? '',
+      contactPhone: body.contactPhone ?? '',
+      images: Array.isArray(body.images) ? body.images : [],
+    };
+    const camp = await updateCampPublicidad(id, publicidadData);
+    return res.json({ success: true, camp });
+  } catch (error) {
+    console.error('Error al guardar publicidad:', error);
+    res.status(500).json({ error: 'Error al guardar la plantilla' });
+  }
+});
+
+/**
+ * PATCH /api/camps/:id/extra
+ * Actualiza datos extra del campamento: ubicación, capacidad, trabajadores, contacto corporativo.
+ * Body: { location?, capacity?, workers?, contacto_corporativo? }
+ */
+router.patch('/:id/extra', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'id inválido' });
+    }
+    const body = req.body || {};
+    const camp = await updateCampExtra(id, {
+      location: body.location,
+      capacity: body.capacity,
+      workers: body.workers,
+      contacto_corporativo: body.contacto_corporativo,
+    });
+    return res.json(camp);
+  } catch (error) {
+    console.error('Error al guardar datos extra:', error);
+    res.status(500).json({ error: 'Error al guardar los datos' });
   }
 });
 

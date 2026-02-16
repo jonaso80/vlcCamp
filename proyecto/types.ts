@@ -49,7 +49,12 @@ export type View =
   | 'contact'
   | 'camp-registration-success'
   | 'my-camp-profile'
-  | 'management';
+  | 'management'
+  | 'plantilla-loading'
+  | 'publicidad'
+  | 'camp-public'
+  | 'management-datos-extra'
+  | 'management-tablas';
 
 /** Campamento del usuario (registrado y confirmado por email). Respuesta de GET /api/camps/my-camp */
 export interface MyCamp {
@@ -63,6 +68,9 @@ export interface MyCamp {
   user_email: string | null;
   status: string;
   created_at?: string;
+  capacity?: number | null;
+  workers?: number | null;
+  contacto_corporativo?: string | null;
 }
 
 export interface User {

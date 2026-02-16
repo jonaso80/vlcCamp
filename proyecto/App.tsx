@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Camp, FormData, DateRange, View, User, UserReview, MyCamp } from './types';
 // Los campamentos se cargarán desde Supabase cuando estén contratados
 import Header from './components/Header';
@@ -18,6 +18,11 @@ import CampRegistrationModal, { CampFormData } from './components/CampRegistrati
 import CampRegistrationSuccessPage from './components/CampRegistrationSuccessPage';
 import MyCampProfilePage from './components/MyCampProfilePage';
 import ManagementPage from './components/ManagementPage';
+import PlantillaLoadingPage from './components/plantilla/PlantillaLoadingPage';
+import PublicidadPage from './components/plantilla/PublicidadPage';
+import CampPublicPage from './components/plantilla/CampPublicPage';
+import DatosExtraPage from './components/management/DatosExtraPage';
+import TablasPage from './components/management/TablasPage';
 import { useTranslations } from './context/LanguageContext';
 import { logEvent } from './utils/logging';
 import { supabase } from './supabaseClient';
@@ -25,9 +30,7 @@ import { supabase } from './supabaseClient';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 import Logo from './components/Logo';
 
-// Array vacío para campamentos clientes
-// Los campamentos solo aparecerán cuando sean contratados y añadidos desde Supabase
-const CLIENT_CAMPS: Camp[] = [];
+const PLACEHOLDER_IMAGE = 'https://placehold.co/400x300/e0f2f1/2e4053?text=Campamento';
 
 // --- ComingSoonPage Component ---
 const ComingSoonPage: React.FC = () => {
@@ -59,15 +62,70 @@ const App: React.FC = () => {
   const [lastCampRegistration, setLastCampRegistration] = useState<CampFormData | null>(null);
   const [userCamp, setUserCamp] = useState<MyCamp | null>(null);
   const [showConfirmadoMessage, setShowConfirmadoMessage] = useState(false);
+  const [publishedCamps, setPublishedCamps] = useState<Camp[]>([]);
+  const [campPublicId, setCampPublicId] = useState<number | null>(null);
   const { t } = useTranslations();
   const [authInitialView, setAuthInitialView] = useState<'login' | 'signup'>('signup');
 
-  // Ajustar vista inicial según la URL (p.ej. /gestion)
+  const loadPublishedCamps = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/camps/public`);
+      if (!res.ok) return;
+      const list = await res.json();
+      const mapped: Camp[] = (list || []).map((c: { id: number; name: string; location: string; publicidad_data?: { images?: string[] } }) => ({
+        id: c.id,
+        name: c.name,
+        location: c.location || '',
+        description: '',
+        longDescription: '',
+        mainImage: c.publicidad_data?.images?.[0] || PLACEHOLDER_IMAGE,
+        images: c.publicidad_data?.images || [],
+        highlights: [],
+      }));
+      setPublishedCamps(mapped);
+    } catch {
+      setPublishedCamps([]);
+    }
+  }, []);
+
+  // Ajustar vista inicial según la URL
   useEffect(() => {
     const path = window.location.pathname;
-    if (path === '/gestion') {
-      setCurrentView('management');
+    if (path === '/gestion') setCurrentView('management');
+    else if (path === '/tablas') setCurrentView('management-tablas');
+    else if (path === '/plantilla') setCurrentView('plantilla-loading');
+    else if (path === '/publicidad') setCurrentView('publicidad');
+    else if (path.startsWith('/camp/')) {
+      const id = parseInt(path.slice(6).split('/')[0], 10);
+      if (!Number.isNaN(id)) {
+        setCampPublicId(id);
+        setCurrentView('camp-public');
+      }
     }
+  }, []);
+
+  useEffect(() => {
+    loadPublishedCamps();
+  }, [loadPublishedCamps]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const path = window.location.pathname;
+      if (path === '/') {
+        setCurrentView('home');
+        setCampPublicId(null);
+      } else if (path === '/gestion') setCurrentView('management');
+      else if (path === '/publicidad') setCurrentView('publicidad');
+      else if (path.startsWith('/camp/')) {
+        const id = parseInt(path.slice(6).split('/')[0], 10);
+        if (!Number.isNaN(id)) {
+          setCampPublicId(id);
+          setCurrentView('camp-public');
+        }
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   // Mostrar mensaje "Gracias por confirmar" cuando llegan desde el enlace del correo (#confirmado)
@@ -202,6 +260,64 @@ const App: React.FC = () => {
       window.history.pushState(null, '', '/gestion');
     }
   };
+
+  const handlePlantillaPublicidadClick = () => {
+    window.history.pushState(null, '', '/plantilla');
+    setCurrentView('plantilla-loading');
+    setTimeout(() => {
+      setCurrentView('publicidad');
+      window.history.replaceState(null, '', '/publicidad');
+    }, 2000);
+  };
+
+  const handleBackToManagement = () => {
+    setCurrentView('management');
+    window.history.pushState(null, '', '/gestion');
+  };
+
+  const handleViewCampPublic = (camp: Camp) => {
+    setCampPublicId(camp.id);
+    setCurrentView('camp-public');
+    window.history.pushState(null, '', `/camp/${camp.id}`);
+  };
+
+  const handleBackFromCampPublic = () => {
+    setCampPublicId(null);
+    setCurrentView('home');
+    window.history.pushState(null, '', '/');
+  };
+
+  const handleDatosExtraClick = () => {
+    setCurrentView('management-datos-extra');
+  };
+
+  const handleBackFromDatosExtra = () => {
+    setCurrentView('management');
+  };
+
+  const handleTablasClick = () => {
+    setCurrentView('management-tablas');
+    window.history.pushState(null, '', '/tablas');
+  };
+
+  const handleBackFromTablas = () => {
+    setCurrentView('management');
+    window.history.pushState(null, '', '/gestion');
+  };
+
+  const handleDatosExtraSaved = (updated: MyCamp) => {
+    setUserCamp(updated);
+  };
+
+  // Redirigir a /publicidad tras el timeout cuando estamos en plantilla-loading
+  useEffect(() => {
+    if (currentView !== 'plantilla-loading') return;
+    const t = setTimeout(() => {
+      setCurrentView('publicidad');
+      window.history.replaceState(null, '', '/publicidad');
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [currentView]);
 
   const handleCampRegistrationClick = () => {
     if (isAuthenticated) {
@@ -669,11 +785,47 @@ const App: React.FC = () => {
             isAuthenticated={isAuthenticated}
             currentUser={currentUser}
             userCamp={userCamp}
+            onPlantillaPublicidadClick={handlePlantillaPublicidadClick}
+            onDatosExtraClick={handleDatosExtraClick}
+            onTablasClick={handleTablasClick}
           />
         );
+      case 'management-datos-extra':
+        return userCamp ? (
+          <DatosExtraPage
+            camp={userCamp}
+            onBack={handleBackFromDatosExtra}
+            onSaved={handleDatosExtraSaved}
+          />
+        ) : null;
+      case 'management-tablas':
+        return userCamp ? (
+          <TablasPage camp={userCamp} onBack={handleBackFromTablas} />
+        ) : null;
+      case 'plantilla-loading':
+        return <PlantillaLoadingPage />;
+      case 'publicidad':
+        return userCamp ? (
+          <PublicidadPage
+            campId={userCamp.id}
+            campName={userCamp.name}
+            onBack={handleBackToManagement}
+            onPublished={loadPublishedCamps}
+          />
+        ) : null;
+      case 'camp-public':
+        return campPublicId !== null ? (
+          <CampPublicPage campId={campPublicId} onBack={handleBackFromCampPublic} />
+        ) : null;
       case 'home':
       default:
-        return <HomePage clientCamps={CLIENT_CAMPS} onSelectCamp={handleSelectCamp} onCampRegistrationClick={handleCampRegistrationClick} />;
+        return (
+          <HomePage
+            clientCamps={publishedCamps}
+            onSelectCamp={handleViewCampPublic}
+            onCampRegistrationClick={handleCampRegistrationClick}
+          />
+        );
     }
   };
 
