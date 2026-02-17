@@ -64,9 +64,18 @@ const AnimatedSection: React.FC<{
   );
 };
 
+const CAMPS_PER_PAGE = 6;
+
 const HomePage: React.FC<HomePageProps> = ({ clientCamps, onSelectCamp, onCampRegistrationClick }) => {
   const { t } = useTranslations();
-  
+  const [pageIndex, setPageIndex] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(clientCamps.length / CAMPS_PER_PAGE));
+  const effectivePage = Math.min(pageIndex, totalPages - 1);
+  const visibleCamps = clientCamps.slice(effectivePage * CAMPS_PER_PAGE, effectivePage * CAMPS_PER_PAGE + CAMPS_PER_PAGE);
+  const showArrows = clientCamps.length > CAMPS_PER_PAGE;
+  const canGoPrev = effectivePage > 0;
+  const canGoNext = effectivePage < totalPages - 1;
+
   return (
     <div className="space-y-20">
       {/* Hero Section - Sin logo redundante */}
@@ -106,12 +115,40 @@ const HomePage: React.FC<HomePageProps> = ({ clientCamps, onSelectCamp, onCampRe
             {t('home.campsTitle')}
           </h2>
           {clientCamps.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {clientCamps.map((camp, index) => (
-                <AnimatedSection key={camp.id} delay={200 + index * 100}>
-                  <CampCard camp={camp} onClick={() => onSelectCamp(camp)} />
-                </AnimatedSection>
-              ))}
+            <div className="flex items-stretch gap-4 md:gap-6">
+              {showArrows && (
+                <button
+                  type="button"
+                  onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                  disabled={!canGoPrev}
+                  aria-label="Ver campamentos anteriores"
+                  className="flex-shrink-0 self-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/80 shadow-md border border-[#b6e0de]/40 flex items-center justify-center text-[#2E4053] hover:bg-[#def1f0] hover:border-[#8EB8BA]/50 disabled:opacity-40 disabled:pointer-events-none transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {visibleCamps.map((camp, index) => (
+                  <AnimatedSection key={camp.id} delay={200 + index * 100}>
+                    <CampCard camp={camp} onClick={() => onSelectCamp(camp)} />
+                  </AnimatedSection>
+                ))}
+              </div>
+              {showArrows && (
+                <button
+                  type="button"
+                  onClick={() => setPageIndex((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={!canGoNext}
+                  aria-label="Ver más campamentos"
+                  className="flex-shrink-0 self-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/80 shadow-md border border-[#b6e0de]/40 flex items-center justify-center text-[#2E4053] hover:bg-[#def1f0] hover:border-[#8EB8BA]/50 disabled:opacity-40 disabled:pointer-events-none transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
             </div>
           ) : (
             <div className="text-center py-16 bg-white/40 backdrop-blur-sm rounded-3xl border border-[#b6e0de]/30 shadow-sm">

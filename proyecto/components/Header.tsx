@@ -4,6 +4,16 @@ import { EditIcon, SwitchUserIcon, LogoutIcon, UserIcon } from './icons/Icons';
 import { useTranslations } from '../context/LanguageContext';
 import { User, MyCamp } from '../types';
 
+/** Rutas que usa el header para enlaces y estado activo */
+export const HEADER_ROUTES = {
+  home: '/',
+  comunidad: '/comunidad',
+  contacto: '/contacto',
+  cuentaPersonal: '/cuentaPersonal',
+  cuentaCamp: '/cuentaCamp',
+  gestion: '/gestion',
+} as const;
+
 interface HeaderProps {
     onHomeClick: () => void;
     onAuthClick: () => void;
@@ -19,9 +29,12 @@ interface HeaderProps {
     /** Vista actual para mostrar la opción activa (cuenta personal vs campamento) */
     currentView: string;
     onManagementClick: () => void;
+    /** Ruta actual (ej. /comunidad, /contacto) para marcar el enlace activo en el nav */
+    currentPath: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick, currentView, onManagementClick }) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick, currentView, onManagementClick, currentPath }) => {
+  const isActive = (path: string) => currentPath === path || (path === HEADER_ROUTES.gestion && (currentPath.startsWith('/gestion')));
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -79,27 +92,43 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
       }`}
     >
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
-        <div className="cursor-pointer" onClick={onHomeClick}>
-           <Logo width={40} height={40}/>
-        </div>
+        <a href={HEADER_ROUTES.home} onClick={(e) => { e.preventDefault(); onHomeClick(); }} className="cursor-pointer block">
+          <Logo width={40} height={40} />
+        </a>
         <nav className="flex items-center space-x-4 md:space-x-6 text-slate-600">
-          <button onClick={onHomeClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('footer.home')}>
+          <a
+            href={HEADER_ROUTES.home}
+            onClick={(e) => { e.preventDefault(); onHomeClick(); }}
+            className={`transition-colors p-2 rounded-lg px-2 py-1.5 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.home) ? 'text-[#8EB8BA] bg-white/50' : 'hover:text-[#8EB8BA] hover:bg-white/50'}`}
+            title={t('footer.home')}
+          >
             Inicio
-          </button>
+          </a>
           {isAuthenticated && (
-            <button
-              onClick={onManagementClick}
-              className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide"
+            <a
+              href={HEADER_ROUTES.gestion}
+              onClick={(e) => { e.preventDefault(); onManagementClick(); }}
+              className={`transition-colors p-2 rounded-lg px-2 py-1.5 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.gestion) ? 'text-[#8EB8BA] bg-white/50' : 'hover:text-[#8EB8BA] hover:bg-white/50'}`}
             >
               Gestión
-            </button>
+            </a>
           )}
-          <button onClick={onCommunityClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('header.community')}>
+          <a
+            href={HEADER_ROUTES.comunidad}
+            onClick={(e) => { e.preventDefault(); onCommunityClick(); }}
+            className={`transition-colors p-2 rounded-lg px-2 py-1.5 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.comunidad) ? 'text-[#8EB8BA] bg-white/50' : 'hover:text-[#8EB8BA] hover:bg-white/50'}`}
+            title={t('header.community')}
+          >
             Comunidad
-          </button>
-          <button onClick={onContactClick} className="hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('footer.contact')}>
+          </a>
+          <a
+            href={HEADER_ROUTES.contacto}
+            onClick={(e) => { e.preventDefault(); onContactClick(); }}
+            className={`transition-colors p-2 rounded-lg px-2 py-1.5 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.contacto) ? 'text-[#8EB8BA] bg-white/50' : 'hover:text-[#8EB8BA] hover:bg-white/50'}`}
+            title={t('footer.contact')}
+          >
             Contacto
-          </button>
+          </a>
           <div className="relative" ref={userMenuRef}>
             <button onClick={handleUserIconClick} className="flex items-center gap-2 hover:text-[#8EB8BA] transition-colors p-2 rounded-lg hover:bg-white/50 px-2 py-1.5 text-sm font-semibold uppercase tracking-wide" title={t('account.title')}>
               <span className="flex-shrink-0 inline-flex [&_svg]:h-5 [&_svg]:w-5" aria-hidden>
@@ -119,12 +148,20 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
               <div className="absolute right-0 mt-2 w-52 bg-white/90 backdrop-blur-md rounded-xl shadow-xl py-1 z-50 animate-fade-in-fast border border-white/50">
                 {userCamp && (
                   <>
-                    <button onClick={() => { onAccountClick(); setIsUserMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${currentView === 'account' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}>
+                    <a
+                      href={HEADER_ROUTES.cuentaPersonal}
+                      onClick={(e) => { e.preventDefault(); onAccountClick(); setIsUserMenuOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${currentView === 'account' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}
+                    >
                       <span className="inline-flex [&_svg]:h-4 [&_svg]:w-4"><UserIcon /></span> Cuenta personal
-                    </button>
-                    <button onClick={() => { onMyCampClick(); setIsUserMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${currentView === 'my-camp-profile' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}>
+                    </a>
+                    <a
+                      href={HEADER_ROUTES.cuentaCamp}
+                      onClick={(e) => { e.preventDefault(); onMyCampClick(); setIsUserMenuOpen(false); }}
+                      className={`block w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${currentView === 'my-camp-profile' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}
+                    >
                       <span className="w-4 h-4 flex items-center justify-center text-base">🏕</span> Cuenta campamento
-                    </button>
+                    </a>
                     <div className="border-t border-slate-200 my-1" />
                   </>
                 )}

@@ -30,6 +30,57 @@ import { supabase } from './supabaseClient';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 import Logo from './components/Logo';
 
+// Rutas de la aplicación (todas las URLs deben respetar estas rutas)
+const ROUTES = {
+  home: '/',
+  comunidad: '/comunidad',
+  contacto: '/contacto',
+  cuentaPersonal: '/cuentaPersonal',
+  cuentaCamp: '/cuentaCamp',
+  gestion: '/gestion',
+  gestionDatosExtra: '/gestion/datosExtra',
+  gestionTablas: '/gestion/tablas',
+  plantilla: '/plantilla',
+  publicidad: '/publicidad',
+  camp: (id: number) => `/camp/${id}`,
+} as const;
+
+function pathToView(path: string): { view: View; campId?: number } | null {
+  if (path === ROUTES.home) return { view: 'home' };
+  if (path === ROUTES.comunidad) return { view: 'community' };
+  if (path === ROUTES.contacto) return { view: 'contact' };
+  if (path === ROUTES.cuentaPersonal) return { view: 'account' };
+  if (path === ROUTES.cuentaCamp) return { view: 'my-camp-profile' };
+  if (path === ROUTES.gestion) return { view: 'management' };
+  if (path === ROUTES.gestionDatosExtra) return { view: 'management-datos-extra' };
+  if (path === ROUTES.gestionTablas) return { view: 'management-tablas' };
+  if (path === ROUTES.plantilla) return { view: 'plantilla-loading' };
+  if (path === ROUTES.publicidad) return { view: 'publicidad' };
+  const campMatch = path.match(/^\/camp\/(\d+)/);
+  if (campMatch) {
+    const id = parseInt(campMatch[1], 10);
+    if (!Number.isNaN(id)) return { view: 'camp-public', campId: id };
+  }
+  return null;
+}
+
+function viewToPath(view: View, campPublicId?: number | null): string {
+  switch (view) {
+    case 'home': return ROUTES.home;
+    case 'community': return ROUTES.comunidad;
+    case 'contact': return ROUTES.contacto;
+    case 'account': return ROUTES.cuentaPersonal;
+    case 'my-camp-profile': return ROUTES.cuentaCamp;
+    case 'management': return ROUTES.gestion;
+    case 'management-datos-extra': return ROUTES.gestionDatosExtra;
+    case 'management-tablas': return ROUTES.gestionTablas;
+    case 'plantilla-loading': return ROUTES.plantilla;
+    case 'publicidad': return ROUTES.publicidad;
+    case 'camp-public': return campPublicId != null ? ROUTES.camp(campPublicId) : ROUTES.home;
+    default: return ROUTES.home;
+  }
+}
+
 const PLACEHOLDER_IMAGE = 'https://placehold.co/400x300/e0f2f1/2e4053?text=Campamento';
 
 // --- ComingSoonPage Component ---
@@ -90,17 +141,16 @@ const App: React.FC = () => {
 
   // Ajustar vista inicial según la URL
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/gestion') setCurrentView('management');
-    else if (path === '/tablas') setCurrentView('management-tablas');
-    else if (path === '/plantilla') setCurrentView('plantilla-loading');
-    else if (path === '/publicidad') setCurrentView('publicidad');
-    else if (path.startsWith('/camp/')) {
-      const id = parseInt(path.slice(6).split('/')[0], 10);
-      if (!Number.isNaN(id)) {
-        setCampPublicId(id);
-        setCurrentView('camp-public');
-      }
+    let path = window.location.pathname;
+    // Redirección legacy: /tablas → /gestion/tablas
+    if (path === '/tablas') {
+      window.history.replaceState(null, '', ROUTES.gestionTablas);
+      path = ROUTES.gestionTablas;
+    }
+    const result = pathToView(path);
+    if (result) {
+      setCurrentView(result.view);
+      if (result.campId != null) setCampPublicId(result.campId);
     }
   }, []);
 
@@ -111,17 +161,10 @@ const App: React.FC = () => {
   useEffect(() => {
     const onPopState = () => {
       const path = window.location.pathname;
-      if (path === '/') {
-        setCurrentView('home');
-        setCampPublicId(null);
-      } else if (path === '/gestion') setCurrentView('management');
-      else if (path === '/publicidad') setCurrentView('publicidad');
-      else if (path.startsWith('/camp/')) {
-        const id = parseInt(path.slice(6).split('/')[0], 10);
-        if (!Number.isNaN(id)) {
-          setCampPublicId(id);
-          setCurrentView('camp-public');
-        }
+      const result = pathToView(path);
+      if (result) {
+        setCurrentView(result.view);
+        setCampPublicId(result.campId ?? null);
       }
     };
     window.addEventListener('popstate', onPopState);
@@ -242,67 +285,78 @@ const App: React.FC = () => {
   
   const handleShowAccount = () => {
     setCurrentView('account');
-  }
+    window.history.pushState(null, '', ROUTES.cuentaPersonal);
+  };
 
   const handleCommunityClick = () => {
-    // Abrir la aplicación social en una nueva pestaña
-    const socialUrl = import.meta.env.VITE_SOCIAL_URL || 'http://localhost:3001';
-    window.open(socialUrl, '_blank');
+    setCurrentView('community');
+    window.history.pushState(null, '', ROUTES.comunidad);
   };
 
   const handleContactClick = () => {
     setCurrentView('contact');
-  }
+    window.history.pushState(null, '', ROUTES.contacto);
+  };
 
   const handleManagementClick = () => {
     setCurrentView('management');
-    if (window.location.pathname !== '/gestion') {
-      window.history.pushState(null, '', '/gestion');
-    }
+    window.history.pushState(null, '', ROUTES.gestion);
   };
 
   const handlePlantillaPublicidadClick = () => {
-    window.history.pushState(null, '', '/plantilla');
     setCurrentView('plantilla-loading');
+    window.history.pushState(null, '', ROUTES.plantilla);
     setTimeout(() => {
       setCurrentView('publicidad');
-      window.history.replaceState(null, '', '/publicidad');
+      window.history.replaceState(null, '', ROUTES.publicidad);
     }, 2000);
   };
 
   const handleBackToManagement = () => {
     setCurrentView('management');
-    window.history.pushState(null, '', '/gestion');
+    window.history.pushState(null, '', ROUTES.gestion);
   };
 
   const handleViewCampPublic = (camp: Camp) => {
     setCampPublicId(camp.id);
     setCurrentView('camp-public');
-    window.history.pushState(null, '', `/camp/${camp.id}`);
+    window.history.pushState(null, '', ROUTES.camp(camp.id));
   };
 
   const handleBackFromCampPublic = () => {
     setCampPublicId(null);
     setCurrentView('home');
-    window.history.pushState(null, '', '/');
+    window.history.pushState(null, '', ROUTES.home);
   };
 
   const handleDatosExtraClick = () => {
     setCurrentView('management-datos-extra');
+    window.history.pushState(null, '', ROUTES.gestionDatosExtra);
   };
 
   const handleBackFromDatosExtra = () => {
     setCurrentView('management');
+    window.history.pushState(null, '', ROUTES.gestion);
   };
 
   const handleTablasClick = () => {
     setCurrentView('management-tablas');
-    window.history.pushState(null, '', '/tablas');
+    window.history.pushState(null, '', ROUTES.gestionTablas);
   };
 
   const handleBackFromTablas = () => {
     setCurrentView('management');
-    window.history.pushState(null, '', '/gestion');
+    window.history.pushState(null, '', ROUTES.gestion);
+  };
+
+  const handleHomeClick = () => {
+    setCurrentView('home');
+    window.history.pushState(null, '', ROUTES.home);
+  };
+
+  const handleMyCampClick = () => {
+    setCurrentView('my-camp-profile');
+    window.history.pushState(null, '', ROUTES.cuentaCamp);
   };
 
   const handleDatosExtraSaved = (updated: MyCamp) => {
@@ -314,7 +368,7 @@ const App: React.FC = () => {
     if (currentView !== 'plantilla-loading') return;
     const t = setTimeout(() => {
       setCurrentView('publicidad');
-      window.history.replaceState(null, '', '/publicidad');
+      window.history.replaceState(null, '', ROUTES.publicidad);
     }, 2000);
     return () => clearTimeout(t);
   }, [currentView]);
@@ -574,6 +628,7 @@ const App: React.FC = () => {
 
   const handleCloseAuth = () => {
     setCurrentView('home');
+    window.history.pushState(null, '', ROUTES.home);
     setSelectedCamp(null);
     setPendingCampRegistration(false);
   };
@@ -747,7 +802,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentView) {
       case 'info':
-        return selectedCamp && <InfoModal camp={selectedCamp} onClose={() => { setCurrentView('home'); setSelectedCamp(null); }} onMoreInfo={() => setCurrentView('detail')} />;
+        return selectedCamp && <InfoModal camp={selectedCamp} onClose={() => { setCurrentView('home'); window.history.pushState(null, '', ROUTES.home); setSelectedCamp(null); }} onMoreInfo={() => setCurrentView('detail')} />;
       case 'detail':
         return selectedCamp && <CampDetailPage camp={selectedCamp} onSelectDateRange={handleSelectDateRange} userReviews={userReviews} />;
       case 'form':
@@ -765,6 +820,7 @@ const App: React.FC = () => {
             onBackHome={() => {
               setLastCampRegistration(null);
               setCurrentView('home');
+              window.history.pushState(null, '', ROUTES.home);
             }}
           />
         );
@@ -772,7 +828,7 @@ const App: React.FC = () => {
         return userCamp ? (
           <MyCampProfilePage
             camp={userCamp}
-            onBackToAccount={() => setCurrentView('account')}
+            onBackToAccount={() => { setCurrentView('account'); window.history.pushState(null, '', ROUTES.cuentaPersonal); }}
           />
         ) : null;
       case 'coming-soon':
@@ -832,7 +888,7 @@ const App: React.FC = () => {
   return (
     <div className="bg-gradient-to-br from-[#E0F2F1] to-[#B2DFDB] min-h-screen text-slate-800 font-sans flex flex-col">
       <Header 
-        onHomeClick={() => setCurrentView('home')} 
+        onHomeClick={handleHomeClick}
         onAuthClick={handleShowAuth}
         isAuthenticated={isAuthenticated}
         currentUser={currentUser}
@@ -842,14 +898,15 @@ const App: React.FC = () => {
         onCommunityClick={handleCommunityClick}
         onContactClick={handleContactClick}
         userCamp={userCamp}
-        onMyCampClick={() => setCurrentView('my-camp-profile')}
+        onMyCampClick={handleMyCampClick}
         currentView={currentView}
         onManagementClick={handleManagementClick}
+        currentPath={viewToPath(currentView, campPublicId)}
       />
       <main className="container mx-auto px-4 py-8 flex-grow">
         {renderContent()}
       </main>
-      <Footer onHomeClick={() => setCurrentView('home')} onAuthClick={handleShowAuth} onContactClick={handleContactClick} />
+      <Footer onHomeClick={handleHomeClick} onAuthClick={handleShowAuth} onContactClick={handleContactClick} />
       {showConfirmadoMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">

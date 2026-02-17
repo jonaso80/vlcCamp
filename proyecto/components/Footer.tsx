@@ -13,7 +13,7 @@ const Footer: React.FC<FooterProps> = ({ onAuthClick, onHomeClick, onContactClic
   const { t } = useTranslations();
 
   return (
-    <footer className="bg-slate-800 text-slate-300 mt-auto">
+    <footer className="text-slate-200 mt-auto" style={{ backgroundColor: '#758991' }}>
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
           {/* Brand */}
@@ -32,19 +32,23 @@ const Footer: React.FC<FooterProps> = ({ onAuthClick, onHomeClick, onContactClic
             </h3>
             <ul className="space-y-3">
               <li>
-                <button onClick={onHomeClick} className="text-slate-400 hover:text-[#8EB8BA] transition-colors text-sm">
+                <a href="/" onClick={(e) => { e.preventDefault(); onHomeClick(); }} className="text-slate-400 hover:text-[#8EB8BA] transition-colors text-sm">
                   {t('footer.home')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={onContactClick} className="text-slate-400 hover:text-[#8EB8BA] transition-colors text-sm">
+                <a href="/contacto" onClick={(e) => { e.preventDefault(); onContactClick(); }} className="text-slate-400 hover:text-[#8EB8BA] transition-colors text-sm">
                   {t('footer.contact')}
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={onAuthClick} className="text-slate-400 hover:text-[#8EB8BA] transition-colors text-sm">
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); onAuthClick(); }}
+                  className="text-slate-300 hover:text-[#8EB8BA] transition-colors text-sm"
+                >
                   {t('footer.createAccount')}
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -149,8 +153,8 @@ const Footer: React.FC<FooterProps> = ({ onAuthClick, onHomeClick, onContactClic
           </div>
         </div>
 
-        <div className="border-t border-slate-700 mt-10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-sm text-center sm:text-left">
+        <div className="border-t border-white/15 mt-10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-slate-400 text-sm text-center sm:text-left">
             &copy; {new Date().getFullYear()} vlcCamp. {t('footer.copyright')}
           </p>
           <div className="flex items-center">
