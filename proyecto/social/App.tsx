@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import FeedbackModal from '../components/ui/FeedbackModal';
 import { Camp, FormData, DateRange, View, User, UserReview } from './types';
 // Los campamentos se cargarán desde Supabase cuando estén contratados
 import Header from './components/Header';
@@ -20,16 +21,16 @@ import Logo from './components/Logo';
 
 // --- ComingSoonPage Component ---
 const ComingSoonPage: React.FC = () => {
-    const { t } = useTranslations();
-    return (
-        <div className="flex items-center justify-center min-h-full text-center animate-fade-in py-16">
-            <div className="bg-white/50 backdrop-blur-md p-8 sm:p-12 rounded-2xl shadow-lg max-w-2xl mx-auto">
-                <Logo width={80} height={80} className="mx-auto mb-4" />
-                <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">{t('community.comingSoonTitle')}</h1>
-                <p className="text-slate-600">{t('community.comingSoonText')}</p>
-            </div>
-        </div>
-    );
+  const { t } = useTranslations();
+  return (
+    <div className="flex items-center justify-center min-h-full text-center animate-fade-in py-16">
+      <div className="bg-white/50 backdrop-blur-md p-8 sm:p-12 rounded-2xl shadow-lg max-w-2xl mx-auto">
+        <Logo width={80} height={80} className="mx-auto mb-4" />
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">{t('community.comingSoonTitle')}</h1>
+        <p className="text-slate-600">{t('community.comingSoonText')}</p>
+      </div>
+    </div>
+  );
 };
 
 
@@ -45,6 +46,21 @@ const App: React.FC = () => {
   const [userReviews, setUserReviews] = useState<UserReview[]>([]);
   const { t } = useTranslations();
   const [authInitialView, setAuthInitialView] = useState<'login' | 'signup'>('signup');
+
+  // Feedback Modal State
+  const [feedback, setFeedback] = useState<{ show: boolean, type: 'success' | 'error' | 'info', message: string }>({
+    show: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showFeedback = (type: 'success' | 'error' | 'info', message: string) => {
+    setFeedback({ show: true, type, message });
+  };
+
+  const closeFeedback = () => {
+    setFeedback(prev => ({ ...prev, show: false }));
+  };
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -63,27 +79,27 @@ const App: React.FC = () => {
         // Cargar usuario actual desde localStorage (sesión local)
         const savedCurrentUser = localStorage.getItem('vlcCampCurrentUser');
         if (savedCurrentUser) {
-            const user = JSON.parse(savedCurrentUser);
-            // Verificar que el usuario existe en Supabase
-            const userExists = profiles?.some(p => p.email === user.email);
-            if (userExists) {
-              setCurrentUser(user);
-              setIsAuthenticated(true);
-              // Asegurar que el usuario tenga un rol asignado
-              const roleKey = `vlcCampCommunityRole_${user.email}`;
-              if (!localStorage.getItem(roleKey)) {
-                localStorage.setItem(roleKey, 'parent');
-              }
-            } else {
-              // Si el usuario no existe en Supabase, limpiar localStorage
-              localStorage.removeItem('vlcCampCurrentUser');
+          const user = JSON.parse(savedCurrentUser);
+          // Verificar que el usuario existe en Supabase
+          const userExists = profiles?.some(p => p.email === user.email);
+          if (userExists) {
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+            // Asegurar que el usuario tenga un rol asignado
+            const roleKey = `vlcCampCommunityRole_${user.email}`;
+            if (!localStorage.getItem(roleKey)) {
+              localStorage.setItem(roleKey, 'parent');
             }
+          } else {
+            // Si el usuario no existe en Supabase, limpiar localStorage
+            localStorage.removeItem('vlcCampCurrentUser');
+          }
         }
 
         // Cargar reseñas desde localStorage (temporal, hasta migrar a Supabase)
         const savedReviews = localStorage.getItem('vlcCampUserReviews');
         if (savedReviews) {
-            setUserReviews(JSON.parse(savedReviews));
+          setUserReviews(JSON.parse(savedReviews));
         }
       } catch (error) {
         console.error('Error al cargar datos iniciales desde Supabase', error);
@@ -103,14 +119,14 @@ const App: React.FC = () => {
       setCurrentView('auth');
     }
   };
-  
+
   const handleShowAuth = () => {
     if (!isAuthenticated) {
       setAuthInitialView('login');
       setCurrentView('auth');
     }
   };
-  
+
   const handleShowAccount = () => {
     setCurrentView('account');
   }
@@ -150,13 +166,13 @@ const App: React.FC = () => {
       };
 
       setUsers(prev => [...prev, createdUser]);
-      
+
       // Establecer rol por defecto para el nuevo usuario
       const roleKey = `vlcCampCommunityRole_${createdUser.email}`;
       localStorage.setItem(roleKey, 'parent');
-      
+
       logEvent('signup', { status: 'OK', name: createdUser.name, email: createdUser.email });
-      
+
       // Auto-login después del registro
       setIsAuthenticated(true);
       setCurrentUser(createdUser);
@@ -171,81 +187,81 @@ const App: React.FC = () => {
   const handleLogin = (name: string): boolean => {
     const user = users.find(u => u.name.toLowerCase() === name.toLowerCase());
     if (user) {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-        localStorage.setItem('vlcCampCurrentUser', JSON.stringify(user));
-        
-        logEvent('login', { status: 'OK', user: user.name, email: user.email });
+      setIsAuthenticated(true);
+      setCurrentUser(user);
+      localStorage.setItem('vlcCampCurrentUser', JSON.stringify(user));
 
-        // Establecer rol por defecto si no existe
-        const roleKey = `vlcCampCommunityRole_${user.email}`;
-        if (!localStorage.getItem(roleKey)) {
-          localStorage.setItem(roleKey, 'parent');
-        }
-        
-        if (selectedCamp) {
-            setCurrentView('info');
-        } else {
-            setCurrentView('community');
-        }
-        return true;
+      logEvent('login', { status: 'OK', user: user.name, email: user.email });
+
+      // Establecer rol por defecto si no existe
+      const roleKey = `vlcCampCommunityRole_${user.email}`;
+      if (!localStorage.getItem(roleKey)) {
+        localStorage.setItem(roleKey, 'parent');
+      }
+
+      if (selectedCamp) {
+        setCurrentView('info');
+      } else {
+        setCurrentView('community');
+      }
+      return true;
     }
     logEvent('login', { status: 'ERROR', error: 'Invalid credentials', name });
     return false;
   };
-  
+
   const handleGoogleLogin = async (googleUserData: { name: string; email: string; avatar: string }) => {
     let user = users.find(u => u.email.toLowerCase() === googleUserData.email.toLowerCase());
-    
+
     if (!user) {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .insert([{
-              name: googleUserData.name,
-              email: googleUserData.email,
-              avatar: googleUserData.avatar
-            }])
-            .select('name, email, avatar')
-            .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .insert([{
+            name: googleUserData.name,
+            email: googleUserData.email,
+            avatar: googleUserData.avatar
+          }])
+          .select('name, email, avatar')
+          .single();
 
-          if (error) {
-            console.error('Error al registrar usuario Google en Supabase', error);
-            logEvent('signup', { status: 'ERROR', error: error.message, email: googleUserData.email, method: 'Google' });
-            return;
-          }
-
-          user = {
-            name: data.name,
-            email: data.email,
-            avatar: data.avatar
-          };
-
-          setUsers(prev => [...prev, user as User]);
-          logEvent('signup', { status: 'OK', name: user.name, email: user.email, method: 'Google' });
-        } catch (error: any) {
-          console.error('Error inesperado al registrar usuario Google', error);
-          logEvent('signup', { status: 'ERROR', error: error?.message ?? 'unknown', email: googleUserData.email, method: 'Google' });
+        if (error) {
+          console.error('Error al registrar usuario Google en Supabase', error);
+          logEvent('signup', { status: 'ERROR', error: error.message, email: googleUserData.email, method: 'Google' });
           return;
         }
+
+        user = {
+          name: data.name,
+          email: data.email,
+          avatar: data.avatar
+        };
+
+        setUsers(prev => [...prev, user as User]);
+        logEvent('signup', { status: 'OK', name: user.name, email: user.email, method: 'Google' });
+      } catch (error: any) {
+        console.error('Error inesperado al registrar usuario Google', error);
+        logEvent('signup', { status: 'ERROR', error: error?.message ?? 'unknown', email: googleUserData.email, method: 'Google' });
+        return;
+      }
     }
 
     setIsAuthenticated(true);
     setCurrentUser(user);
     localStorage.setItem('vlcCampCurrentUser', JSON.stringify(user));
-    
+
     // Establecer rol por defecto si no existe
     const roleKey = `vlcCampCommunityRole_${user.email}`;
     if (!localStorage.getItem(roleKey)) {
       localStorage.setItem(roleKey, 'parent');
     }
-    
+
     logEvent('login', { status: 'OK', user: user.name, email: user.email, method: 'Google' });
 
     if (selectedCamp) {
-        setCurrentView('info');
+      setCurrentView('info');
     } else {
-        setCurrentView('community');
+      setCurrentView('community');
     }
   };
 
@@ -253,7 +269,7 @@ const App: React.FC = () => {
     setCurrentView('home');
     setSelectedCamp(null);
   };
-  
+
   const handleLogout = () => {
     logEvent('logout', { user: currentUser?.name, email: currentUser?.email });
     setIsAuthenticated(false);
@@ -280,12 +296,12 @@ const App: React.FC = () => {
       localStorage.setItem('vlcCampUsers', JSON.stringify(updatedUsers));
       return updatedUsers;
     });
-    logEvent('updates', { 
-        action: 'Personal Data Update', 
-        user: updatedUser.name, 
-        email: updatedUser.email, 
-        newData: updatedUser, 
-        storage: 'localStorage' 
+    logEvent('updates', {
+      action: 'Personal Data Update',
+      user: updatedUser.name,
+      email: updatedUser.email,
+      newData: updatedUser,
+      storage: 'localStorage'
     });
   };
 
@@ -298,16 +314,16 @@ const App: React.FC = () => {
     setFormData(data);
     setCurrentView('summary');
   };
-  
+
   const handleAddReview = (newReview: UserReview) => {
     setUserReviews(prevReviews => {
-        const updatedReviews = [...prevReviews, newReview];
-        try {
-            localStorage.setItem('vlcCampUserReviews', JSON.stringify(updatedReviews));
-        } catch (error) {
-            console.error("Failed to save reviews to localStorage", error);
-        }
-        return updatedReviews;
+      const updatedReviews = [...prevReviews, newReview];
+      try {
+        localStorage.setItem('vlcCampUserReviews', JSON.stringify(updatedReviews));
+      } catch (error) {
+        console.error("Failed to save reviews to localStorage", error);
+      }
+      return updatedReviews;
     });
   };
 
@@ -320,13 +336,13 @@ const App: React.FC = () => {
         formData: formData,
       };
 
-      logEvent('enrollments', { 
-          action: 'New Enrollment',
-          status: 'OK',
-          camp: selectedCamp.name, 
-          user: currentUser.name, 
-          email: currentUser.email, 
-          photoPermission: formData.photoPermission 
+      logEvent('enrollments', {
+        action: 'New Enrollment',
+        status: 'OK',
+        camp: selectedCamp.name,
+        user: currentUser.name,
+        email: currentUser.email,
+        photoPermission: formData.photoPermission
       });
 
       try {
@@ -338,18 +354,18 @@ const App: React.FC = () => {
         localStorage.setItem('vlcCampEnrollments', JSON.stringify(allEnrollments));
       } catch (error) {
         console.error("Failed to save enrollment", error);
-        logEvent('enrollments', { 
-            action: 'New Enrollment',
-            status: 'ERROR',
-            error: 'Failed to save to localStorage',
-            camp: selectedCamp.name, 
-            user: currentUser.name, 
-            email: currentUser.email,
+        logEvent('enrollments', {
+          action: 'New Enrollment',
+          status: 'ERROR',
+          error: 'Failed to save to localStorage',
+          camp: selectedCamp.name,
+          user: currentUser.name,
+          email: currentUser.email,
         });
       }
     }
-    
-    alert('¡Inscripción confirmada! Recibirás un correo con los detalles.');
+
+    showFeedback('success', '¡Inscripción confirmada! Recibirás un correo con los detalles.');
     setCurrentView('home');
     setSelectedCamp(null);
     setSelectedDateRange(null);
@@ -390,8 +406,8 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-gradient-to-br from-[#E0F2F1] to-[#B2DFDB] min-h-screen text-slate-800 font-sans flex flex-col">
-      <Header 
-        onHomeClick={() => setCurrentView('home')} 
+      <Header
+        onHomeClick={() => setCurrentView('home')}
         onAuthClick={handleShowAuth}
         isAuthenticated={isAuthenticated}
         currentUser={currentUser}
@@ -405,16 +421,25 @@ const App: React.FC = () => {
       </main>
       <Footer onHomeClick={() => setCurrentView('home')} onAuthClick={handleShowAuth} />
       {(currentView === 'auth' || (currentView === 'community' && !currentUser)) && (
-        <AuthPage 
-          onClose={() => { setCurrentView('home'); setSelectedCamp(null); }} 
-          onRegister={handleRegister} 
-          onLogin={handleLogin} 
-          onGoogleLogin={handleGoogleLogin} 
-          initialView={authInitialView} 
+        <AuthPage
+          onClose={() => { setCurrentView('home'); setSelectedCamp(null); }}
+          onRegister={handleRegister}
+          onLogin={handleLogin}
+          onGoogleLogin={handleGoogleLogin}
+          initialView={authInitialView}
         />
       )}
       <ChatbotFab onToggle={() => setIsChatOpen(prev => !prev)} />
+      <ChatbotFab onToggle={() => setIsChatOpen(prev => !prev)} />
       <Chatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
+      {feedback.show && (
+        <FeedbackModal
+          type={feedback.type}
+          message={feedback.message}
+          onClose={closeFeedback}
+        />
+      )}
     </div>
   );
 };

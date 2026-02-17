@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ COPY . .
 RUN npm run build
 
 # Production stage - usar nginx para servir archivos estáticos
-FROM nginx:alpine
+FROM nginx:alpine-slim
 
 # Copiar build de Vite al directorio de nginx
 COPY --from=builder /app/dist /usr/share/nginx/html

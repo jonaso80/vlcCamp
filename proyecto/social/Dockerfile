@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -13,23 +13,25 @@ ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
 
-# Copiar archivos de dependencias
+# Instalar dependencias del root (para que los componentes compartidos encuentren react)
 COPY package*.json ./
-
-# Instalar dependencias
 RUN npm install
 
-# Copiar código fuente
+# Copiar todo el código (incluyendo components)
 COPY . .
+
+# Moverse al directorio social e instalar sus dependencias
+WORKDIR /app/social
+RUN npm install
 
 # Build de la aplicación con Vite
 RUN npm run build
 
 # Production stage - usar nginx para servir archivos estáticos
-FROM nginx:alpine
+FROM nginx:alpine-slim
 
 # Copiar build de Vite al directorio de nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/social/dist /usr/share/nginx/html
 
 # Copiar configuración de nginx para SPA
 RUN echo 'server { \

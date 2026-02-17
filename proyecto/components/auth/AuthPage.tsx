@@ -32,8 +32,8 @@ function decodeJwtResponse(token: string) {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
   } catch (e) {
@@ -52,7 +52,7 @@ const SignupForm: React.FC<{ onSwitchToLogin: () => void, onSignup: (email: stri
   const { t } = useTranslations();
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSignup(email, fullName);
@@ -78,41 +78,41 @@ const SignupForm: React.FC<{ onSwitchToLogin: () => void, onSignup: (email: stri
 };
 
 // --- LOGIN FORM ---
-const LoginForm: React.FC<{ 
-    onSwitchToSignup: () => void; 
-    onLogin: (name: string) => boolean;
-    onGoogleCredentialResponse: (response: any) => void;
+const LoginForm: React.FC<{
+  onSwitchToSignup: () => void;
+  onLogin: (name: string) => boolean;
+  onGoogleCredentialResponse: (response: any) => void;
 }> = ({ onSwitchToSignup, onLogin, onGoogleCredentialResponse }) => {
-    const { t } = useTranslations();
-    const [name, setName] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslations();
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-    // Desactivado temporalmente - Google Sign-In requiere configuración de OAuth
-    // useEffect(() => {
-    //     const GOOGLE_CLIENT_ID = "990339599427-cvga0ho3rq61n5i2mo76d3s5g1fgk6s2.apps.googleusercontent.com";
-    //     if (window.google?.accounts?.id) {
-    //         window.google.accounts.id.initialize({
-    //             client_id: GOOGLE_CLIENT_ID,
-    //             callback: onGoogleCredentialResponse
-    //         });
-    //         window.google.accounts.id.renderButton(
-    //             document.getElementById("googleSignInDiv"),
-    //             { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left" }
-    //         );
-    //     }
-    // }, [onGoogleCredentialResponse]);
+  // Desactivado temporalmente - Google Sign-In requiere configuración de OAuth
+  // useEffect(() => {
+  //     const GOOGLE_CLIENT_ID = "990339599427-cvga0ho3rq61n5i2mo76d3s5g1fgk6s2.apps.googleusercontent.com";
+  //     if (window.google?.accounts?.id) {
+  //         window.google.accounts.id.initialize({
+  //             client_id: GOOGLE_CLIENT_ID,
+  //             callback: onGoogleCredentialResponse
+  //         });
+  //         window.google.accounts.id.renderButton(
+  //             document.getElementById("googleSignInDiv"),
+  //             { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular", logo_alignment: "left" }
+  //         );
+  //     }
+  // }, [onGoogleCredentialResponse]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        const success = onLogin(name);
-        if (!success) {
-            setError(t('auth.loginFailed'));
-        }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    const success = onLogin(name);
+    if (!success) {
+      setError(t('auth.loginFailed'));
     }
-    return (
-     <div className="p-8 w-full">
+  }
+  return (
+    <div className="p-8 w-full">
       <Logo className="mb-4" />
       <h2 className="text-3xl font-bold text-slate-800 mb-6">{t('auth.loginTitle')}</h2>
       <form className="space-y-4" onSubmit={handleSubmit}>
@@ -122,8 +122,8 @@ const LoginForm: React.FC<{
         <button type="submit" className="w-full bg-[#8EB8BA] text-white py-3 mt-2 rounded-lg hover:bg-teal-500 transition font-semibold text-base">{t('auth.login')}</button>
       </form>
 
-        {/* Google Sign-In desactivado temporalmente */}
-        {/* <div className="flex items-center my-6">
+      {/* Google Sign-In desactivado temporalmente */}
+      {/* <div className="flex items-center my-6">
             <div className="flex-grow border-t border-slate-300"></div>
             <span className="flex-shrink mx-4 text-slate-500 text-sm">{t('auth.orDivider')}</span>
             <div className="flex-grow border-t border-slate-300"></div>
@@ -135,90 +135,117 @@ const LoginForm: React.FC<{
         {t('auth.noAccount')} <button onClick={onSwitchToSignup} className="font-semibold text-[#8EB8BA] hover:underline">{t('auth.registerHere')}</button>
       </p>
     </div>
-    );
+  );
 };
 
-// --- VERIFICATION FORM ---
-const VerificationForm: React.FC<{ onVerifySuccess: () => void, email: string, generatedCode: string | null }> = ({ onVerifySuccess, email, generatedCode }) => {
-    const { t } = useTranslations();
-    const [code, setCode] = useState(new Array(6).fill(""));
-    const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+/* ... (imports and existing logic stays the same) */
+import FeedbackModal from '../ui/FeedbackModal';
 
-    useEffect(() => {
-        inputsRef.current[0]?.focus();
-    }, []);
+/* ... existing interfaces ... */
 
-    const handleChange = (element: HTMLInputElement, index: number) => {
-        if (isNaN(Number(element.value))) return false;
+// --- VERIFICATION FORM WITH MODAL SUPPORT ---
+const VerificationForm: React.FC<{
+  onVerifySuccess: () => void,
+  email: string,
+  generatedCode: string | null,
+  onShowFeedback: (type: 'success' | 'error', message: string) => void
+}> = ({ onVerifySuccess, email, generatedCode, onShowFeedback }) => {
+  const { t } = useTranslations();
+  const [code, setCode] = useState(new Array(6).fill(""));
+  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
-        const newCode = [...code];
-        newCode[index] = element.value;
-        setCode(newCode);
+  useEffect(() => {
+    inputsRef.current[0]?.focus();
+  }, []);
 
-        if (element.nextSibling && element.value) {
-            (element.nextSibling as HTMLInputElement).focus();
-        }
-    };
+  const handleChange = (element: HTMLInputElement, index: number) => {
+    if (isNaN(Number(element.value))) return false;
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-        if (e.key === 'Backspace' && !code[index] && index > 0) {
-            inputsRef.current[index - 1]?.focus();
-        }
+    const newCode = [...code];
+    newCode[index] = element.value;
+    setCode(newCode);
+
+    if (element.nextSibling && element.value) {
+      (element.nextSibling as HTMLInputElement).focus();
     }
+  };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const enteredCode = code.join("");
-        if(enteredCode === generatedCode) {
-           alert(t('auth.verificationSuccess'));
-           onVerifySuccess();
-        } else {
-            alert(t('auth.invalidCode'));
-            setCode(new Array(6).fill(""));
-            inputsRef.current[0]?.focus();
-        }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && !code[index] && index > 0) {
+      inputsRef.current[index - 1]?.focus();
     }
+  }
 
-    return (
-        <div className="p-8 text-center w-full">
-             <h2 className="text-2xl font-bold text-slate-700 mb-2">{t('auth.verifyTitle')}</h2>
-             <p className="text-slate-600 mb-6" dangerouslySetInnerHTML={{ __html: t('auth.verifyInstruction', { email }) }} />
-             
-             <form onSubmit={handleSubmit}>
-                <div className="flex justify-center gap-2 mb-6">
-                    {code.map((data, index) => (
-                        <input
-                            key={index}
-                            ref={el => { inputsRef.current[index] = el; }}
-                            type="text"
-                            maxLength={1}
-                            value={data}
-                            onChange={e => handleChange(e.target, index)}
-                            onKeyDown={e => handleKeyDown(e, index)}
-                            className="w-12 h-14 text-center text-2xl font-semibold bg-slate-100 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8EB8BA] text-slate-800"
-                        />
-                    ))}
-                </div>
-                <button type="submit" className="w-full bg-[#8EB8BA] text-white py-2 rounded-md hover:bg-teal-500 transition font-semibold" disabled={!generatedCode}>
-                    {generatedCode ? t('auth.verifyButton') : t('auth.generatingCode')}
-                </button>
-             </form>
-             <div className="text-sm text-slate-500 mt-6 bg-slate-100 p-2 rounded-md">
-                <p>Si no recibes el email, revisa tu carpeta de spam. El código también aparece aquí: <strong>{generatedCode}</strong></p>
-             </div>
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const enteredCode = code.join("");
+    if (enteredCode === generatedCode) {
+      // Success feedback handled by parent or just proceed
+      // onShowFeedback('success', t('auth.verificationSuccess')); // Opcional, o directo al registro
+      onVerifySuccess();
+    } else {
+      onShowFeedback('error', t('auth.invalidCode'));
+      setCode(new Array(6).fill(""));
+      inputsRef.current[0]?.focus();
+    }
+  }
+
+  return (
+    <div className="p-8 text-center w-full">
+      <h2 className="text-2xl font-bold text-slate-700 mb-2">{t('auth.verifyTitle')}</h2>
+      <p className="text-slate-600 mb-6" dangerouslySetInnerHTML={{ __html: t('auth.verifyInstruction', { email }) }} />
+
+      <form onSubmit={handleSubmit}>
+        <div className="flex justify-center gap-2 mb-6">
+          {code.map((data, index) => (
+            <input
+              key={index}
+              ref={el => { inputsRef.current[index] = el; }}
+              type="text"
+              maxLength={1}
+              value={data}
+              onChange={e => handleChange(e.target, index)}
+              onKeyDown={e => handleKeyDown(e, index)}
+              className="w-12 h-14 text-center text-2xl font-semibold bg-slate-100 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8EB8BA] text-slate-800"
+            />
+          ))}
         </div>
-    );
+        <button type="submit" className="w-full bg-[#8EB8BA] text-white py-2 rounded-md hover:bg-teal-500 transition font-semibold" disabled={!generatedCode}>
+          {generatedCode ? t('auth.verifyButton') : t('auth.generatingCode')}
+        </button>
+      </form>
+      <div className="text-sm text-slate-500 mt-6 bg-slate-100 p-2 rounded-md">
+        <p>Si no recibes el email, revisa tu carpeta de spam.</p>
+      </div>
+    </div>
+  );
 }
 
 
 const AuthPage: React.FC<AuthPageProps> = ({ onClose, onRegister, onLogin, onGoogleLogin, initialView = 'signup' }) => {
+  const { t } = useTranslations(); // Add hook here to use in AuthPage content
   const [view, setView] = useState<AuthView>(initialView);
   const [verificationEmail, setVerificationEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [generatedAvatar, setGeneratedAvatar] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  // Status Modal State
+  const [feedback, setFeedback] = useState<{ show: boolean, type: 'success' | 'error' | 'info', message: string }>({
+    show: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showFeedback = (type: 'success' | 'error' | 'info', message: string) => {
+    setFeedback({ show: true, type, message });
+  };
+
+  const closeFeedback = () => {
+    setFeedback(prev => ({ ...prev, show: false }));
+  };
+
   const handleGoogleCredentialResponse = (response: any) => {
     const payload = decodeJwtResponse(response.credential);
     if (payload) {
@@ -228,10 +255,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onRegister, onLogin, onGoo
         avatar: payload.picture,
       });
     } else {
-        console.error("Failed to decode Google credential response.");
+      console.error("Failed to decode Google credential response.");
     }
   };
-  
+
   const generateAvatar = async (): Promise<string> => {
     // De momento usamos un avatar estático de placeholder
     return 'https://i.pravatar.cc/150';
@@ -241,14 +268,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onRegister, onLogin, onGoo
     setIsLoading(true);
     setVerificationEmail(email);
     setUserName(fullName);
-    
+
     const avatar = await generateAvatar();
     setGeneratedAvatar(avatar);
-    
+
     // Generar código de verificación
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedCode(code);
-    
+
     // Enviar código por email usando el backend
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
     try {
@@ -265,53 +292,70 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onRegister, onLogin, onGoo
       });
 
       const data = await response.json();
-      
+
       if (!response.ok || !data.success) {
         console.error('Error al enviar email:', data.error || 'Error desconocido');
-        // Aún así, permitimos continuar con el flujo (el código se muestra en la UI)
-        alert('No se pudo enviar el email. El código se muestra a continuación.');
+        // Usar modal en lugar de alert
+        showFeedback('error', 'No se pudo enviar el email. Inténtalo de nuevo más tarde.');
       } else {
         console.log('✅ Código de verificación enviado por email');
       }
     } catch (error) {
       console.error('Error al enviar código por email:', error);
-      // Aún así, permitimos continuar con el flujo
-      alert('No se pudo enviar el email. El código se muestra a continuación.');
+      showFeedback('error', 'No se pudo conectar con el servidor de correo.');
     }
-    
+
     setView('verify');
     setIsLoading(false);
   };
-  
+
   const handleVerificationSuccess = () => {
+    // Success feedback (optional, or just register)
+    showFeedback('success', t('auth.verificationSuccess'));
+
+    // Slight delay to allow reading the modal, or just register immediately
+    // For now, register immediately but maybe after modifying onRegister to not close automatically if we want to show modal
+    // But usually registration closes the modal. Let's close AuthPage and show a global success toast? 
+    // The user requirement is "ventanitas", so let's show the modal inside AuthPage.
+    // If we register, the AuthPage might unmount.
+
+    // Let's rely on the parent to handle the "Registration Success" UI if needed,
+    // OR show the modal here and wait for close.
+    // But standard flow:
     onRegister({ name: userName, avatar: generatedAvatar, email: verificationEmail });
-    setView('login');
+    // setView('login'); // Redirect to login after register? Or auto-login? 
+    // Usually onRegister closes the modal.
   }
 
   const renderView = () => {
-    switch(view) {
-        case 'login':
-            return <LoginForm onSwitchToSignup={() => setView('signup')} onLogin={onLogin} onGoogleCredentialResponse={handleGoogleCredentialResponse} />;
-        case 'verify':
-            return <VerificationForm onVerifySuccess={handleVerificationSuccess} email={verificationEmail} generatedCode={generatedCode} />;
-        case 'signup':
-        default:
-            return <SignupForm onSwitchToLogin={() => setView('login')} onSignup={handleSignupSubmit} isLoading={isLoading} />;
+    switch (view) {
+      case 'login':
+        return <LoginForm onSwitchToSignup={() => setView('signup')} onLogin={onLogin} onGoogleCredentialResponse={handleGoogleCredentialResponse} />;
+      case 'verify':
+        return <VerificationForm
+          onVerifySuccess={handleVerificationSuccess}
+          email={verificationEmail}
+          generatedCode={generatedCode}
+          onShowFeedback={showFeedback}
+        />;
+      case 'signup':
+      default:
+        return <SignupForm onSwitchToLogin={() => setView('login')} onSignup={handleSignupSubmit} isLoading={isLoading} />;
     }
   }
 
   const getImageForView = () => {
-      switch(view) {
-          case 'login': return 'https://picsum.photos/seed/login/400/600';
-          case 'signup': return 'https://picsum.photos/seed/signup/400/600';
-          case 'verify': return 'https://picsum.photos/seed/verify/400/600';
-      }
+    switch (view) {
+      case 'login': return 'https://picsum.photos/seed/login/400/600';
+      case 'signup': return 'https://picsum.photos/seed/signup/400/600';
+      case 'verify': return 'https://picsum.photos/seed/verify/400/600';
+    }
   }
 
   return (
     <>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-        <div 
+        <div
           className="bg-white rounded-xl shadow-2xl w-full max-w-4xl m-4 flex overflow-hidden animate-slide-up"
           onClick={(e) => e.stopPropagation()}
         >
@@ -319,13 +363,21 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onRegister, onLogin, onGoo
             <CloseIcon />
           </button>
           <div className="w-full md:w-1/2 flex items-center justify-center">
-              {renderView()}
+            {renderView()}
           </div>
           <div className="hidden md:block md:w-1/2">
-              <img src={getImageForView()} alt="Inspiración" className="w-full h-full object-cover" />
+            <img src={getImageForView()} alt="Inspiración" className="w-full h-full object-cover" />
           </div>
         </div>
       </div>
+
+      {feedback.show && (
+        <FeedbackModal
+          type={feedback.type}
+          message={feedback.message}
+          onClose={closeFeedback}
+        />
+      )}
     </>
   );
 };

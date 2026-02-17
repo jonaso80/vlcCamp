@@ -81,7 +81,7 @@ export async function getPublishedCamps() {
 export async function getCampPublicPage(id) {
   const { data, error } = await supabase
     .from('camps')
-    .select('id, name, location, publicidad_data')
+    .select('id, name, location, publicidad_data, camp_details')
     .eq('id', id)
     .eq('publicidad_published', true)
     .maybeSingle();
@@ -132,3 +132,23 @@ export async function updateCampExtra(campId, { location, capacity, workers, con
   return data;
 }
 
+
+/**
+ * Actualiza los datos del Camp Builder (detalles, descripción, publicidad).
+ */
+export async function updateCampBuilderData(campId, { camp_details, description, publicidad_data }) {
+  const { data, error } = await supabase
+    .from('camps')
+    .update({
+      camp_details,
+      description,
+      publicidad_data,
+      publicidad_published: true
+    })
+    .eq('id', campId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

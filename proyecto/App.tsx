@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+// Force HMR update
+import FeedbackModal from './components/ui/FeedbackModal';
 import { Camp, FormData, DateRange, View, User, UserReview, MyCamp } from './types';
 // Los campamentos se cargarán desde Supabase cuando estén contratados
 import Header from './components/Header';
@@ -85,16 +87,16 @@ const PLACEHOLDER_IMAGE = 'https://placehold.co/400x300/e0f2f1/2e4053?text=Campa
 
 // --- ComingSoonPage Component ---
 const ComingSoonPage: React.FC = () => {
-    const { t } = useTranslations();
-    return (
-        <div className="flex items-center justify-center min-h-full text-center animate-fade-in py-16">
-            <div className="bg-white/50 backdrop-blur-md p-8 sm:p-12 rounded-2xl shadow-lg max-w-2xl mx-auto">
-                <Logo width={80} height={80} className="mx-auto mb-4" />
-                <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">{t('community.comingSoonTitle')}</h1>
-                <p className="text-slate-600">{t('community.comingSoonText')}</p>
-            </div>
-        </div>
-    );
+  const { t } = useTranslations();
+  return (
+    <div className="flex items-center justify-center min-h-full text-center animate-fade-in py-16">
+      <div className="bg-white/50 backdrop-blur-md p-8 sm:p-12 rounded-2xl shadow-lg max-w-2xl mx-auto">
+        <Logo width={80} height={80} className="mx-auto mb-4" />
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">{t('community.comingSoonTitle')}</h1>
+        <p className="text-slate-600">{t('community.comingSoonText')}</p>
+      </div>
+    </div>
+  );
 };
 
 
@@ -117,6 +119,21 @@ const App: React.FC = () => {
   const [campPublicId, setCampPublicId] = useState<number | null>(null);
   const { t } = useTranslations();
   const [authInitialView, setAuthInitialView] = useState<'login' | 'signup'>('signup');
+
+  // Feedback Modal State
+  const [feedback, setFeedback] = useState<{ show: boolean, type: 'success' | 'error' | 'info', message: string }>({
+    show: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showFeedback = (type: 'success' | 'error' | 'info', message: string) => {
+    setFeedback({ show: true, type, message });
+  };
+
+  const closeFeedback = () => {
+    setFeedback(prev => ({ ...prev, show: false }));
+  };
 
   const loadPublishedCamps = useCallback(async () => {
     try {
@@ -222,7 +239,7 @@ const App: React.FC = () => {
     const loadInitialData = async () => {
       try {
         console.log('Cargando datos iniciales desde Supabase...');
-        
+
         // Cargar usuarios desde Supabase
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
@@ -275,14 +292,14 @@ const App: React.FC = () => {
       setCurrentView('auth');
     }
   };
-  
+
   const handleShowAuth = () => {
     if (!isAuthenticated) {
       setAuthInitialView('login');
       setCurrentView('auth');
     }
   };
-  
+
   const handleShowAccount = () => {
     setCurrentView('account');
     window.history.pushState(null, '', ROUTES.cuentaPersonal);
@@ -401,7 +418,7 @@ const App: React.FC = () => {
 
       if (error) {
         console.error('Error al registrar campamento:', error);
-        alert('Error al enviar la solicitud. Por favor, inténtalo de nuevo.');
+        showFeedback('error', 'Error al enviar la solicitud. Por favor, inténtalo de nuevo.');
         return;
       }
 
@@ -417,7 +434,7 @@ const App: React.FC = () => {
       console.log('📧 [CAMP REGISTRATION] ===== INICIANDO ENVÍO DE EMAIL =====');
       console.log('📧 [CAMP REGISTRATION] Email destino:', data.email);
       console.log('📧 [CAMP REGISTRATION] Nombre del campamento:', data.campName);
-      
+
       try {
         console.log('📧 [CAMP REGISTRATION] Enviando correo de confirmación a:', data.email);
         console.log('📧 [CAMP REGISTRATION] API URL:', `${API_BASE_URL}/api/camps/send-registration-confirmation`);
@@ -461,7 +478,7 @@ const App: React.FC = () => {
           console.error('❌ [CAMP REGISTRATION] Error:', emailResult.error || emailResult.warning);
           console.error('❌ [CAMP REGISTRATION] Detalles completos:', JSON.stringify(emailResult, null, 2));
           console.error('❌ [CAMP REGISTRATION] ====================================');
-          
+
           // Mostrar alerta al usuario (opcional, comentado para no interrumpir el flujo)
           // alert(`No se pudo enviar el email de confirmación: ${emailResult.error || emailResult.warning}`);
         }
@@ -474,7 +491,7 @@ const App: React.FC = () => {
 
       // Cerrar el modal primero
       setIsCampRegistrationModalOpen(false);
-      
+
       // Guardar los datos y cambiar la vista después de un pequeño delay
       // para asegurar que el modal se cierre completamente
       setLastCampRegistration(data);
@@ -506,24 +523,24 @@ const App: React.FC = () => {
       }
 
       if (existingUser) {
-        alert('Este email ya está registrado. Por favor, inicia sesión.');
+        showFeedback('info', 'Este email ya está registrado. Por favor, inicia sesión.');
         logEvent('signup', { status: 'ERROR', error: 'User already exists', email: newUser.email });
         return;
       }
 
       const { data, error } = await supabase
         .from('profiles')
-        .insert([{ 
-          name: newUser.name, 
-          email: newUser.email.toLowerCase(), 
-          avatar: newUser.avatar || 'https://i.pravatar.cc/150' 
+        .insert([{
+          name: newUser.name,
+          email: newUser.email.toLowerCase(),
+          avatar: newUser.avatar || 'https://i.pravatar.cc/150'
         }])
         .select('name, email, avatar')
         .single();
 
       if (error) {
         console.error('Error al registrar usuario en Supabase:', error);
-        alert('Error al registrar: ' + error.message);
+        showFeedback('error', 'Error al registrar: ' + error.message);
         logEvent('signup', { status: 'ERROR', error: error.message, email: newUser.email });
         return;
       }
@@ -536,79 +553,79 @@ const App: React.FC = () => {
 
       setUsers(prev => [...prev, createdUser]);
       logEvent('signup', { status: 'OK', name: createdUser.name, email: createdUser.email });
-      alert('¡Registro exitoso! Por favor, inicia sesión.');
+      showFeedback('success', '¡Registro exitoso! Por favor, inicia sesión.');
     } catch (error: any) {
       console.error('Error inesperado al registrar usuario:', error);
-      alert('Error inesperado al registrar. Por favor, inténtalo de nuevo.');
+      showFeedback('error', 'Error inesperado al registrar. Por favor, inténtalo de nuevo.');
       logEvent('signup', { status: 'ERROR', error: error?.message ?? 'unknown', email: newUser.email });
     }
   };
 
   const handleLogin = (nameOrEmail: string): boolean => {
     // Buscar por nombre O por email (case insensitive)
-    const user = users.find(u => 
-      u.name.toLowerCase() === nameOrEmail.toLowerCase() || 
+    const user = users.find(u =>
+      u.name.toLowerCase() === nameOrEmail.toLowerCase() ||
       u.email.toLowerCase() === nameOrEmail.toLowerCase()
     );
-    
-    if (user) {
-        setIsAuthenticated(true);
-        setCurrentUser(user);
-        
-        logEvent('login', { status: 'OK', user: user.name, email: user.email });
 
-        if (pendingCampRegistration) {
-            setPendingCampRegistration(false);
-            setCurrentView('home');
-            setTimeout(() => setIsCampRegistrationModalOpen(true), 100);
-        } else if (selectedCamp) {
-            setCurrentView('info');
-        } else {
-            setCurrentView('home');
-        }
-        return true;
+    if (user) {
+      setIsAuthenticated(true);
+      setCurrentUser(user);
+
+      logEvent('login', { status: 'OK', user: user.name, email: user.email });
+
+      if (pendingCampRegistration) {
+        setPendingCampRegistration(false);
+        setCurrentView('home');
+        setTimeout(() => setIsCampRegistrationModalOpen(true), 100);
+      } else if (selectedCamp) {
+        setCurrentView('info');
+      } else {
+        setCurrentView('home');
+      }
+      return true;
     }
-    
+
     console.log('Login fallido. Usuario no encontrado:', nameOrEmail);
     console.log('Usuarios disponibles:', users.map(u => ({ name: u.name, email: u.email })));
     logEvent('login', { status: 'ERROR', error: 'Invalid credentials', nameOrEmail });
     return false;
   };
-  
+
   const handleGoogleLogin = async (googleUserData: { name: string; email: string; avatar: string }) => {
     let user = users.find(u => u.email.toLowerCase() === googleUserData.email.toLowerCase());
-    
+
     if (!user) {
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .insert([{
-              name: googleUserData.name,
-              email: googleUserData.email,
-              avatar: googleUserData.avatar
-            }])
-            .select('name, email, avatar')
-            .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .insert([{
+            name: googleUserData.name,
+            email: googleUserData.email,
+            avatar: googleUserData.avatar
+          }])
+          .select('name, email, avatar')
+          .single();
 
-          if (error) {
-            console.error('Error al registrar usuario Google en Supabase', error);
-            logEvent('signup', { status: 'ERROR', error: error.message, email: googleUserData.email, method: 'Google' });
-            return;
-          }
-
-          user = {
-            name: data.name,
-            email: data.email,
-            avatar: data.avatar
-          };
-
-          setUsers(prev => [...prev, user as User]);
-          logEvent('signup', { status: 'OK', name: user.name, email: user.email, method: 'Google' });
-        } catch (error: any) {
-          console.error('Error inesperado al registrar usuario Google', error);
-          logEvent('signup', { status: 'ERROR', error: error?.message ?? 'unknown', email: googleUserData.email, method: 'Google' });
+        if (error) {
+          console.error('Error al registrar usuario Google en Supabase', error);
+          logEvent('signup', { status: 'ERROR', error: error.message, email: googleUserData.email, method: 'Google' });
           return;
         }
+
+        user = {
+          name: data.name,
+          email: data.email,
+          avatar: data.avatar
+        };
+
+        setUsers(prev => [...prev, user as User]);
+        logEvent('signup', { status: 'OK', name: user.name, email: user.email, method: 'Google' });
+      } catch (error: any) {
+        console.error('Error inesperado al registrar usuario Google', error);
+        logEvent('signup', { status: 'ERROR', error: error?.message ?? 'unknown', email: googleUserData.email, method: 'Google' });
+        return;
+      }
     }
 
     setIsAuthenticated(true);
@@ -616,13 +633,13 @@ const App: React.FC = () => {
     logEvent('login', { status: 'OK', user: user.name, email: user.email, method: 'Google' });
 
     if (pendingCampRegistration) {
-        setPendingCampRegistration(false);
-        setCurrentView('home');
-        setTimeout(() => setIsCampRegistrationModalOpen(true), 100);
+      setPendingCampRegistration(false);
+      setCurrentView('home');
+      setTimeout(() => setIsCampRegistrationModalOpen(true), 100);
     } else if (selectedCamp) {
-        setCurrentView('info');
+      setCurrentView('info');
     } else {
-        setCurrentView('home');
+      setCurrentView('home');
     }
   };
 
@@ -632,7 +649,7 @@ const App: React.FC = () => {
     setSelectedCamp(null);
     setPendingCampRegistration(false);
   };
-  
+
   const handleLogout = () => {
     logEvent('logout', { user: currentUser?.name, email: currentUser?.email });
     setIsAuthenticated(false);
@@ -683,21 +700,21 @@ const App: React.FC = () => {
       setCurrentUser(savedUser);
       setUsers(prevUsers => prevUsers.map(u => u.email === savedUser.email ? savedUser : u));
 
-      logEvent('updates', { 
-          action: 'Personal Data Update', 
-          status: 'OK',
-          user: savedUser.name, 
-          email: savedUser.email, 
-          newData: savedUser
+      logEvent('updates', {
+        action: 'Personal Data Update',
+        status: 'OK',
+        user: savedUser.name,
+        email: savedUser.email,
+        newData: savedUser
       });
     } catch (error: any) {
       console.error('Error inesperado al actualizar usuario', error);
-      logEvent('updates', { 
-          action: 'Personal Data Update', 
-          status: 'ERROR',
-          user: updatedUser.name, 
-          email: updatedUser.email, 
-          error: error?.message ?? 'unknown'
+      logEvent('updates', {
+        action: 'Personal Data Update',
+        status: 'ERROR',
+        user: updatedUser.name,
+        email: updatedUser.email,
+        error: error?.message ?? 'unknown'
       });
     }
   };
@@ -711,7 +728,7 @@ const App: React.FC = () => {
     setFormData(data);
     setCurrentView('summary');
   };
-  
+
   const handleAddReview = async (newReview: UserReview) => {
     try {
       const { error } = await supabase
@@ -747,13 +764,13 @@ const App: React.FC = () => {
           form_data: formData,
         };
 
-        logEvent('enrollments', { 
-            action: 'New Enrollment',
-            status: 'PENDING',
-            camp: selectedCamp.name, 
-            user: currentUser.name, 
-            email: currentUser.email, 
-            photoPermission: formData.photoPermission 
+        logEvent('enrollments', {
+          action: 'New Enrollment',
+          status: 'PENDING',
+          camp: selectedCamp.name,
+          user: currentUser.name,
+          email: currentUser.email,
+          photoPermission: formData.photoPermission
         });
 
         try {
@@ -768,28 +785,28 @@ const App: React.FC = () => {
             throw new Error(errorBody.error || 'Error al crear la inscripción');
           }
 
-          logEvent('enrollments', { 
-              action: 'New Enrollment',
-              status: 'OK',
-              camp: selectedCamp.name, 
-              user: currentUser.name, 
-              email: currentUser.email, 
-              photoPermission: formData.photoPermission 
+          logEvent('enrollments', {
+            action: 'New Enrollment',
+            status: 'OK',
+            camp: selectedCamp.name,
+            user: currentUser.name,
+            email: currentUser.email,
+            photoPermission: formData.photoPermission
           });
         } catch (error: any) {
           console.error('Error al crear inscripción en backend', error);
-          logEvent('enrollments', { 
-              action: 'New Enrollment',
-              status: 'ERROR',
-              error: error?.message ?? 'unknown',
-              camp: selectedCamp.name, 
-              user: currentUser.name, 
-              email: currentUser.email,
+          logEvent('enrollments', {
+            action: 'New Enrollment',
+            status: 'ERROR',
+            error: error?.message ?? 'unknown',
+            camp: selectedCamp.name,
+            user: currentUser.name,
+            email: currentUser.email,
           });
         }
       }
 
-      alert('¡Inscripción confirmada! Recibirás un correo con los detalles.');
+      showFeedback('success', '¡Inscripción confirmada! Recibirás un correo con los detalles.');
       setCurrentView('home');
       setSelectedCamp(null);
       setSelectedDateRange(null);
@@ -887,7 +904,7 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-gradient-to-br from-[#E0F2F1] to-[#B2DFDB] min-h-screen text-slate-800 font-sans flex flex-col">
-      <Header 
+      <Header
         onHomeClick={handleHomeClick}
         onAuthClick={handleShowAuth}
         isAuthenticated={isAuthenticated}
@@ -930,13 +947,21 @@ const App: React.FC = () => {
         </div>
       )}
       {currentView === 'auth' && <AuthPage onClose={handleCloseAuth} onRegister={handleRegister} onLogin={handleLogin} onGoogleLogin={handleGoogleLogin} initialView={authInitialView} />}
-      <CampRegistrationModal 
-        isOpen={isCampRegistrationModalOpen} 
-        onClose={() => setIsCampRegistrationModalOpen(false)} 
+      <CampRegistrationModal
+        isOpen={isCampRegistrationModalOpen}
+        onClose={() => setIsCampRegistrationModalOpen(false)}
         onSubmit={handleCampRegistrationSubmit}
       />
       <ChatbotFab onToggle={() => setIsChatOpen(prev => !prev)} />
       <Chatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
+      {feedback.show && (
+        <FeedbackModal
+          type={feedback.type}
+          message={feedback.message}
+          onClose={closeFeedback}
+        />
+      )}
     </div>
   );
 };

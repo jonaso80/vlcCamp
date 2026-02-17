@@ -1,6 +1,6 @@
 import { supabase } from '../supabaseClient';
 
-export type LogCategory = 'login' | 'signup' | 'logout' | 'enrollments' | 'updates';
+export type LogCategory = 'login' | 'signup' | 'logout' | 'enrollments' | 'updates' | 'camp_registration';
 
 interface LogData {
   timestamp: string;
