@@ -33,30 +33,19 @@ export async function confirmCampByEmail(email) {
 }
 
 /**
- * Obtiene el campamento del usuario por email (contact_email o user_email).
+ * Obtiene todos los campamentos del usuario por email (contact_email o user_email).
  */
-export async function getCampByUserEmail(email) {
-  const { data: byContact, error: errContact } = await supabase
+export async function getCampsByUserEmail(email) {
+  const { data, error } = await supabase
     .from('camps')
     .select('*')
-    .eq('contact_email', email)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .or(`contact_email.eq.${email},user_email.eq.${email}`)
+    .order('created_at', { ascending: false });
 
-  if (errContact) throw errContact;
-  if (byContact) return byContact;
-
-  const { data: byUser, error: errUser } = await supabase
-    .from('camps')
-    .select('*')
-    .eq('user_email', email)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (errUser) throw errUser;
-  return byUser;
+  if (error) {
+    throw error;
+  }
+  return data || [];
 }
 
 /**

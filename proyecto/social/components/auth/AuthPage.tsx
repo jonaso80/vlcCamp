@@ -293,9 +293,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onRegister, onLogin, onGoo
   };
 
   const handleVerificationSuccess = () => {
-    showFeedback('success', t('auth.verificationSuccess'));
+    // Rely on parent to show registration success feedback
     onRegister({ name: userName, avatar: generatedAvatar, email: verificationEmail });
-    // setView('login');
+
+    // Switch to login view so user can enter their credentials
+    setView('login');
   }
 
   const renderView = () => {

@@ -25,6 +25,7 @@ import PublicidadPage from './components/plantilla/PublicidadPage';
 import CampPublicPage from './components/plantilla/CampPublicPage';
 import DatosExtraPage from './components/management/DatosExtraPage';
 import TablasPage from './components/management/TablasPage';
+import CampSelectorPage from './components/management/CampSelectorPage';
 import { useTranslations } from './context/LanguageContext';
 import { logEvent } from './utils/logging';
 import { supabase } from './supabaseClient';
@@ -113,7 +114,8 @@ const App: React.FC = () => {
   const [isCampRegistrationModalOpen, setIsCampRegistrationModalOpen] = useState(false);
   const [pendingCampRegistration, setPendingCampRegistration] = useState(false);
   const [lastCampRegistration, setLastCampRegistration] = useState<CampFormData | null>(null);
-  const [userCamp, setUserCamp] = useState<MyCamp | null>(null);
+  const [userCamps, setUserCamps] = useState<MyCamp[]>([]);
+  const [activeCampId, setActiveCampId] = useState<number | null>(null);
   const [showConfirmadoMessage, setShowConfirmadoMessage] = useState(false);
   const [publishedCamps, setPublishedCamps] = useState<Camp[]>([]);
   const [campPublicId, setCampPublicId] = useState<number | null>(null);
@@ -196,44 +198,37 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Si el usuario ya está logueado al confirmar, refrescar su campamento para que aparezca "Mi campamento"
-  useEffect(() => {
-    if (!showConfirmadoMessage || !currentUser?.email) return;
-    const refetch = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/camps/my-camp?email=${encodeURIComponent(currentUser.email)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setUserCamp(data);
-        }
-      } catch {
-        // ignore
-      }
-    };
-    refetch();
-  }, [showConfirmadoMessage, currentUser?.email]);
-
   // Cargar el campamento del usuario cuando está autenticado
-  useEffect(() => {
+  const loadMyCamps = useCallback(async () => {
     if (!currentUser?.email) {
-      setUserCamp(null);
+      setUserCamps([]);
+      setActiveCampId(null);
       return;
     }
-    const loadMyCamp = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/camps/my-camp?email=${encodeURIComponent(currentUser.email)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setUserCamp(data);
-        } else {
-          setUserCamp(null);
-        }
-      } catch {
-        setUserCamp(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/camps/my-camp?email=${encodeURIComponent(currentUser.email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserCamps(data);
+      } else {
+        setUserCamps([]);
       }
-    };
-    loadMyCamp();
+    } catch {
+      setUserCamps([]);
+    }
   }, [currentUser?.email]);
+
+  useEffect(() => {
+    loadMyCamps();
+  }, [loadMyCamps]);
+
+  // Auto-seleccionar solo si hay exactamente un campamento
+  useEffect(() => {
+    if (userCamps.length === 1 && !activeCampId) {
+      setActiveCampId(userCamps[0].id);
+    }
+  }, [userCamps, activeCampId]);
+
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -247,11 +242,7 @@ const App: React.FC = () => {
 
         if (profilesError) {
           console.error('Error al cargar perfiles desde Supabase:', profilesError);
-          console.error('Código de error:', profilesError.code);
-          console.error('Mensaje:', profilesError.message);
-          console.error('Detalles:', profilesError.details);
         } else if (profiles) {
-          console.log('Perfiles cargados:', profiles.length, 'usuarios');
           setUsers(profiles as User[]);
         }
 
@@ -272,7 +263,6 @@ const App: React.FC = () => {
             text: r.comment,
           }));
           setUserReviews(mappedReviews);
-          console.log('Reseñas cargadas:', mappedReviews.length);
         }
       } catch (error) {
         console.error('Error al cargar datos iniciales desde Supabase:', error);
@@ -316,6 +306,12 @@ const App: React.FC = () => {
   };
 
   const handleManagementClick = () => {
+    setCurrentView('management');
+    window.history.pushState(null, '', ROUTES.gestion);
+  };
+
+  const handleActiveCampSelect = (campId: number) => {
+    setActiveCampId(campId);
     setCurrentView('management');
     window.history.pushState(null, '', ROUTES.gestion);
   };
@@ -377,7 +373,7 @@ const App: React.FC = () => {
   };
 
   const handleDatosExtraSaved = (updated: MyCamp) => {
-    setUserCamp(updated);
+    setUserCamps(prev => prev.map(c => c.id === updated.id ? updated : c));
   };
 
   // Redirigir a /publicidad tras el timeout cuando estamos en plantilla-loading
@@ -495,6 +491,8 @@ const App: React.FC = () => {
       // Guardar los datos y cambiar la vista después de un pequeño delay
       // para asegurar que el modal se cierre completamente
       setLastCampRegistration(data);
+      setActiveCampId(null); // Reset to force selection of the new camp later
+      await loadMyCamps();    // Fetch current list including the new one
       console.log('✅ Camp registration completed, switching to success view', data);
       setTimeout(() => {
         console.log('➡️ Setting currentView to camp-registration-success');
@@ -586,8 +584,7 @@ const App: React.FC = () => {
       return true;
     }
 
-    console.log('Login fallido. Usuario no encontrado:', nameOrEmail);
-    console.log('Usuarios disponibles:', users.map(u => ({ name: u.name, email: u.email })));
+    console.log('Login fallido:', nameOrEmail);
     logEvent('login', { status: 'ERROR', error: 'Invalid credentials', nameOrEmail });
     return false;
   };
@@ -654,7 +651,8 @@ const App: React.FC = () => {
     logEvent('logout', { user: currentUser?.name, email: currentUser?.email });
     setIsAuthenticated(false);
     setCurrentUser(null);
-    setUserCamp(null);
+    setUserCamps([]);
+    setActiveCampId(null);
     setCurrentView('home');
     setSelectedCamp(null);
   };
@@ -816,6 +814,8 @@ const App: React.FC = () => {
     registerEnrollment();
   };
 
+  const activeCamp = userCamps.find(c => c.id === activeCampId) || null;
+
   const renderContent = () => {
     switch (currentView) {
       case 'info':
@@ -829,7 +829,14 @@ const App: React.FC = () => {
       case 'account':
         return currentUser && <AccountPage user={currentUser} onUpdateUser={handleUpdateUser} onAddReview={handleAddReview} userReviews={userReviews} />;
       case 'community':
-        return currentUser && <CommunityPage currentUser={currentUser} onSwitchAccount={handleSwitchAccount} onAccountClick={handleShowAccount} />;
+        return currentUser && (
+          <CommunityPage
+            currentUser={currentUser}
+            role={userCamps.length > 0 ? 'monitor' : 'parent'}
+            onSwitchAccount={handleSwitchAccount}
+            onAccountClick={handleShowAccount}
+          />
+        );
       case 'camp-registration-success':
         return (
           <CampRegistrationSuccessPage
@@ -842,9 +849,9 @@ const App: React.FC = () => {
           />
         );
       case 'my-camp-profile':
-        return userCamp ? (
+        return activeCamp ? (
           <MyCampProfilePage
-            camp={userCamp}
+            camp={activeCamp}
             onBackToAccount={() => { setCurrentView('account'); window.history.pushState(null, '', ROUTES.cuentaPersonal); }}
           />
         ) : null;
@@ -853,35 +860,39 @@ const App: React.FC = () => {
       case 'contact':
         return <ContactPage />;
       case 'management':
+        if (userCamps.length > 1 && !activeCampId) {
+          return <CampSelectorPage camps={userCamps} onSelect={handleActiveCampSelect} />;
+        }
         return (
           <ManagementPage
             isAuthenticated={isAuthenticated}
             currentUser={currentUser}
-            userCamp={userCamp}
+            userCamp={activeCamp}
             onPlantillaPublicidadClick={handlePlantillaPublicidadClick}
             onDatosExtraClick={handleDatosExtraClick}
             onTablasClick={handleTablasClick}
+            onSwitchCamp={() => setActiveCampId(null)}
           />
         );
       case 'management-datos-extra':
-        return userCamp ? (
+        return activeCamp ? (
           <DatosExtraPage
-            camp={userCamp}
+            camp={activeCamp}
             onBack={handleBackFromDatosExtra}
             onSaved={handleDatosExtraSaved}
           />
         ) : null;
       case 'management-tablas':
-        return userCamp ? (
-          <TablasPage camp={userCamp} onBack={handleBackFromTablas} />
+        return activeCamp ? (
+          <TablasPage camp={activeCamp} onBack={handleBackFromTablas} />
         ) : null;
       case 'plantilla-loading':
         return <PlantillaLoadingPage />;
       case 'publicidad':
-        return userCamp ? (
+        return activeCamp ? (
           <PublicidadPage
-            campId={userCamp.id}
-            campName={userCamp.name}
+            campId={activeCamp.id}
+            campName={activeCamp.name}
             onBack={handleBackToManagement}
             onPublished={loadPublishedCamps}
           />
@@ -914,16 +925,22 @@ const App: React.FC = () => {
         onSwitchAccount={handleSwitchAccount}
         onCommunityClick={handleCommunityClick}
         onContactClick={handleContactClick}
-        userCamp={userCamp}
+        userCamp={activeCamp}
         onMyCampClick={handleMyCampClick}
         currentView={currentView}
         onManagementClick={handleManagementClick}
         currentPath={viewToPath(currentView, campPublicId)}
+        onSwitchCamp={() => {
+          setActiveCampId(null);
+          setCurrentView('management');
+          window.history.pushState(null, '', ROUTES.gestion);
+        }}
+        hasMultipleCamps={userCamps.length > 1}
       />
       <main className="container mx-auto px-4 py-8 flex-grow">
         {renderContent()}
       </main>
-      <Footer onHomeClick={handleHomeClick} onAuthClick={handleShowAuth} onContactClick={handleContactClick} />
+      {currentView !== 'community' && <Footer onHomeClick={handleHomeClick} onAuthClick={handleShowAuth} onContactClick={handleContactClick} />}
       {showConfirmadoMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
@@ -946,7 +963,7 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-      {currentView === 'auth' && <AuthPage onClose={handleCloseAuth} onRegister={handleRegister} onLogin={handleLogin} onGoogleLogin={handleGoogleLogin} initialView={authInitialView} />}
+      {(currentView === 'auth' || (currentView === 'community' && !currentUser)) && <AuthPage onClose={handleCloseAuth} onRegister={handleRegister} onLogin={handleLogin} onGoogleLogin={handleGoogleLogin} initialView={authInitialView} />}
       <CampRegistrationModal
         isOpen={isCampRegistrationModalOpen}
         onClose={() => setIsCampRegistrationModalOpen(false)}

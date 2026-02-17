@@ -8,9 +8,10 @@ interface ManagementPageProps {
   onPlantillaPublicidadClick: () => void;
   onDatosExtraClick: () => void;
   onTablasClick: () => void;
+  onSwitchCamp?: () => void;
 }
 
-const ManagementPage: React.FC<ManagementPageProps> = ({ isAuthenticated, currentUser, userCamp, onPlantillaPublicidadClick, onDatosExtraClick, onTablasClick }) => {
+const ManagementPage: React.FC<ManagementPageProps> = ({ isAuthenticated, currentUser, userCamp, onPlantillaPublicidadClick, onDatosExtraClick, onTablasClick, onSwitchCamp }) => {
   if (!isAuthenticated) {
     return (
       <div className="max-w-3xl mx-auto py-16 text-center animate-fade-in">
@@ -45,7 +46,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ isAuthenticated, curren
     { id: 'plantilla-publicidad', label: 'Plantilla de publicidad', icon: '📢', onClick: onPlantillaPublicidadClick },
     { id: 'datos-extra', label: 'Datos extra', icon: '📋', onClick: onDatosExtraClick },
     { id: 'tablas', label: 'Tablas', icon: '📊', onClick: onTablasClick },
-    { id: 'usuarios', label: 'Usuarios', icon: '👥', onClick: () => {} },
+    { id: 'usuarios', label: 'Usuarios', icon: '👥', onClick: () => { } },
   ] as const;
 
   return (
@@ -57,12 +58,24 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ isAuthenticated, curren
         Aquí podrás gestionar la información y operaciones de tu campamento en vlcCamp.
       </p>
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-[#b6e0de]/40 p-8 mb-10">
-        <h2 className="text-xl md:text-2xl font-semibold text-[#2E4053] mb-2">
-          {userCamp.name}
-        </h2>
-        <p className="text-slate-600 mb-2">
-          Este es el campamento asociado a tu usuario.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-xl md:text-2xl font-semibold text-[#2E4053] mb-1">
+              {userCamp.name}
+            </h2>
+            <p className="text-slate-600">
+              Este es el campamento que estás gestionando.
+            </p>
+          </div>
+          {onSwitchCamp && (
+            <button
+              onClick={onSwitchCamp}
+              className="px-4 py-2 bg-white border border-[#8EB8BA] text-[#8EB8BA] rounded-xl text-sm font-semibold hover:bg-[#def1f0] transition-colors flex items-center gap-2 self-start md:self-center"
+            >
+              ↻ Cambiar campamento
+            </button>
+          )}
+        </div>
         {userCamp.status && (
           <p className="text-sm text-slate-500">
             Estado actual: <span className="font-semibold">{userCamp.status}</span>

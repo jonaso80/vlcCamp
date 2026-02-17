@@ -31,9 +31,28 @@ interface HeaderProps {
   onManagementClick: () => void;
   /** Ruta actual (ej. /comunidad, /contacto) para marcar el enlace activo en el nav */
   currentPath: string;
+  onSwitchCamp?: () => void;
+  hasMultipleCamps?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticated, currentUser, onLogout, onAccountClick, onSwitchAccount, onCommunityClick, onContactClick, userCamp, onMyCampClick, currentView, onManagementClick, currentPath }) => {
+const Header: React.FC<HeaderProps> = ({
+  onHomeClick,
+  onAuthClick,
+  isAuthenticated,
+  currentUser,
+  onLogout,
+  onAccountClick,
+  onSwitchAccount,
+  onCommunityClick,
+  onContactClick,
+  userCamp,
+  onMyCampClick,
+  currentView,
+  onManagementClick,
+  currentPath,
+  onSwitchCamp,
+  hasMultipleCamps
+}) => {
   const isActive = (path: string) => currentPath === path || (path === HEADER_ROUTES.gestion && (currentPath.startsWith('/gestion')));
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -86,8 +105,8 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
   return (
     <header
       className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled
-          ? 'bg-white/70 backdrop-blur-lg shadow-lg border-b border-white/20'
-          : 'bg-white/30 backdrop-blur-sm shadow-md'
+        ? 'bg-white/70 backdrop-blur-lg shadow-lg border-b border-white/20'
+        : 'bg-white/30 backdrop-blur-sm shadow-md'
         }`}
     >
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
@@ -155,10 +174,21 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
                     <a
                       href={HEADER_ROUTES.cuentaCamp}
                       onClick={(e) => { e.preventDefault(); onMyCampClick(); setIsUserMenuOpen(false); }}
-                      className={`block w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors ${currentView === 'my-camp-profile' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}
+                      className={`block w-full text-left px-4 py-2 text-sm flex items-center justify-between gap-2 transition-colors ${currentView === 'my-camp-profile' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}
                     >
-                      <span className="w-4 h-4 flex items-center justify-center text-base">🏕</span> Cuenta campamento
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 flex items-center justify-center text-base">🏕</span>
+                        <span className="truncate max-w-[120px]">{userCamp.name}</span>
+                      </div>
                     </a>
+                    {hasMultipleCamps && (
+                      <button
+                        onClick={() => { onSwitchCamp?.(); setIsUserMenuOpen(false); }}
+                        className="block w-full text-left px-4 py-2 text-xs text-[#8EB8BA] hover:bg-[#def1f0] font-semibold italic transition-colors"
+                      >
+                        ↻ Cambiar campamento
+                      </button>
+                    )}
                     <div className="border-t border-slate-200 my-1" />
                   </>
                 )}
@@ -190,8 +220,8 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick, onAuthClick, isAuthenticat
                     key={key}
                     onClick={() => handleLangChange(key)}
                     className={`block w-full text-left px-4 py-2 text-sm transition-colors ${lang === key
-                        ? 'bg-[#def1f0] text-[#2E4053] font-semibold'
-                        : 'text-slate-700 hover:bg-[#def1f0]'
+                      ? 'bg-[#def1f0] text-[#2E4053] font-semibold'
+                      : 'text-slate-700 hover:bg-[#def1f0]'
                       }`}
                   >
                     {languages[key]}

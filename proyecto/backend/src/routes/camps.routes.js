@@ -7,7 +7,7 @@ const log = (msg) => {
 import {
   getAllCamps,
   confirmCampByEmail,
-  getCampByUserEmail,
+  getCampsByUserEmail,
   getPublishedCamps,
   getCampPublicPage,
   updateCampPublicidad,
@@ -145,7 +145,7 @@ router.get('/confirm-registration', async (req, res) => {
 
 /**
  * GET /api/camps/my-camp?email=xxx
- * Devuelve el campamento del usuario (contact_email o user_email) con status confirmed.
+ * Devuelve los campamentos asociados al usuario (contact_email o user_email).
  */
 router.get('/my-camp', async (req, res) => {
   try {
@@ -153,11 +153,11 @@ router.get('/my-camp', async (req, res) => {
     if (!email || typeof email !== 'string') {
       return res.status(400).json({ error: 'email es requerido' });
     }
-    const camp = await getCampByUserEmail(email);
-    return res.json(camp || null);
+    const camps = await getCampsByUserEmail(email);
+    return res.json(camps);
   } catch (error) {
-    console.error('Error al obtener mi campamento:', error);
-    res.status(500).json({ error: 'Error al obtener el campamento' });
+    console.error('Error al obtener mis campamentos:', error);
+    res.status(500).json({ error: 'Error al obtener los campamentos' });
   }
 });
 

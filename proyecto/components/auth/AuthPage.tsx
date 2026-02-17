@@ -310,21 +310,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onClose, onRegister, onLogin, onGoo
   };
 
   const handleVerificationSuccess = () => {
-    // Success feedback (optional, or just register)
-    showFeedback('success', t('auth.verificationSuccess'));
-
-    // Slight delay to allow reading the modal, or just register immediately
-    // For now, register immediately but maybe after modifying onRegister to not close automatically if we want to show modal
-    // But usually registration closes the modal. Let's close AuthPage and show a global success toast? 
-    // The user requirement is "ventanitas", so let's show the modal inside AuthPage.
-    // If we register, the AuthPage might unmount.
-
-    // Let's rely on the parent to handle the "Registration Success" UI if needed,
-    // OR show the modal here and wait for close.
-    // But standard flow:
+    // Rely on parent (App.tsx) to show registration success feedback to avoid double modals
     onRegister({ name: userName, avatar: generatedAvatar, email: verificationEmail });
-    // setView('login'); // Redirect to login after register? Or auto-login? 
-    // Usually onRegister closes the modal.
+
+    // Switch to login view so user can enter their credentials
+    setView('login');
   }
 
   const renderView = () => {

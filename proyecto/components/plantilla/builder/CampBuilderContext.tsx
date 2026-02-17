@@ -36,9 +36,12 @@ export const CampBuilderProvider: React.FC<{ children: ReactNode; campId: number
 
                 if (error) {
                     console.error('Error loading camp details:', error);
+                    setData(INITIAL_DATA);
                 } else if (camp?.camp_details && Object.keys(camp.camp_details).length > 0) {
                     // Merge with initial data to ensure all fields exist even if schema updates
-                    setData(prev => ({ ...prev, ...camp.camp_details }));
+                    setData({ ...INITIAL_DATA, ...camp.camp_details });
+                } else {
+                    setData(INITIAL_DATA);
                 }
             } catch (err) {
                 console.error('Unexpected error loading camp:', err);
