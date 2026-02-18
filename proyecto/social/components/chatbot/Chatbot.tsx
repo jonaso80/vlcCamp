@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Chat } from "@google/genai";
+import Groq from "groq-sdk";
 import { useTranslations } from '../../context/LanguageContext';
 import { Message } from '../../types';
 import { CloseIcon, SendIcon, UserIcon as UserAvatarIcon } from '../icons/Icons';
@@ -24,13 +24,13 @@ const EugenioAvatar: React.FC<{ className?: string }> = ({ className }) => (
           <stop offset="100%" stopColor="#C0C0C0" />
         </linearGradient>
         <linearGradient id="eugenio-shirt" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#A9D4D6" />
-            <stop offset="100%" stopColor="#8EB8BA" />
+          <stop offset="0%" stopColor="#A9D4D6" />
+          <stop offset="100%" stopColor="#8EB8BA" />
         </linearGradient>
       </defs>
-      <circle cx="50" cy="50" r="50" fill="#E9F6FF"/>
+      <circle cx="50" cy="50" r="50" fill="#E9F6FF" />
       <path d="M25 90 C 40 100, 60 100, 75 90 L 75 100 H 25 Z" fill="url(#eugenio-shirt)" />
-      <path d="M50 88 L 46 96 H 54 Z" fill="#E9F6FF"/>
+      <path d="M50 88 L 46 96 H 54 Z" fill="#E9F6FF" />
       <circle cx="50" cy="50" r="32" fill="url(#eugenio-skin)" />
       <path d="M28 35 Q 50 18, 72 35 C 85 45, 80 65, 72 55 C 80 22, 20 22, 28 55 C 20 65, 15 45, 28 35 Z" fill="url(#eugenio-hair)" />
       <path d="M38 42 Q 50 40, 62 42" stroke="#D3B8AE" strokeWidth="0.7" fill="none" />
@@ -43,16 +43,16 @@ const EugenioAvatar: React.FC<{ className?: string }> = ({ className }) => (
         <circle cx="40" cy="53" r="8" fill="rgba(210, 230, 255, 0.3)" />
         <circle cx="60" cy="53" r="8" fill="rgba(210, 230, 255, 0.3)" />
         <path d="M48 53 H 52" />
-        <path d="M30 52 H 18" strokeLinecap="round"/>
-        <path d="M70 52 H 82" strokeLinecap="round"/>
+        <path d="M30 52 H 18" strokeLinecap="round" />
+        <path d="M70 52 H 82" strokeLinecap="round" />
       </g>
       <g fill="#333">
         <circle cx="40" cy="53" r="1.8" />
         <circle cx="60" cy="53" r="1.8" />
       </g>
       <g fill="white">
-         <circle cx="41" cy="52" r="0.7" />
-         <circle cx="61" cy="52" r="0.7" />
+        <circle cx="41" cy="52" r="0.7" />
+        <circle cx="61" cy="52" r="0.7" />
       </g>
       <path d="M48 58 C 50 62, 52 62, 50 66" stroke="#D3B8AE" strokeWidth="1.5" strokeLinecap="round" fill="none" />
       <path d="M42 70 Q 50 75, 58 70" stroke="#A08C82" strokeWidth="2" strokeLinecap="round" fill="none" />
@@ -72,7 +72,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
   const { t, lang } = useTranslations();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [chat, setChat] = useState<Chat | null>(null);
+  const [groq, setGroq] = useState<Groq | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -83,82 +83,95 @@ const Chatbot: React.FC<ChatbotProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
+
   useEffect(() => {
     if (isOpen) {
-        // Usa la API key de entorno; si falta, recurre al valor proporcionado
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY ?? 'AIzaSyA0QyLSljIwEUNPfc7HTjXzkQ0FxwgI2YE';
-        const ai = new GoogleGenAI({ apiKey });
-        // No hay campamentos disponibles hasta que sean contratados
-        const campInfo = 'Actualmente no hay campamentos disponibles. Los campamentos aparecerán cuando sean contratados y añadidos a la plataforma.';
-        
-        const languageMap: Record<string, string> = {
-            es: 'Spanish',
-            en: 'English',
-            va: 'Valencian'
-        };
-        const currentLanguage = languageMap[lang] || 'Spanish';
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY || '';
+      if (!apiKey) {
+        console.error("Missing VITE_GROQ_API_KEY");
+      }
 
-        const systemInstruction = `You are Eugenio, the expert virtual guide for vlcCamp, a summer camp coordination service in the Valencian Community. Your personality is cheerful, enthusiastic, and very helpful. 🥳
+      const newGroq = new Groq({
+        apiKey,
+        dangerouslyAllowBrowser: true
+      });
 
-Your main goal is to help users find their perfect summer camp. You can:
-- Provide details about specific camps.
-- Compare different camps.
-- Suggest camps based on interests like "water sports", "nature", "farm animals", or "adventure".
-
-IMPORTANT RULES:
-1. You MUST ONLY use the camp data provided below to answer questions.
-2. IMPORTANT: You MUST respond exclusively in ${currentLanguage}. Do not switch languages.
-3. DO NOT invent information like prices, specific dates, or availability. If asked, explain that you don't have that information and suggest visiting the official camp page for the most up-to-date details.
-4. Keep your answers concise, friendly, and easy to read. Use emojis to make the conversation more engaging!
-5. If you don't know the answer, politely say that you can't help with that specific query but you can help with other questions about activities or locations.
-
-Here is the camp data you have access to:
----
-${campInfo}
----
-Always end your responses by encouraging the user to ask more questions.`;
-
-        const newChat = ai.chats.create({
-            model: 'gemini-2.5-flash',
-            config: {
-                systemInstruction: systemInstruction,
-            },
-        });
-        setChat(newChat);
-        setMessages([{ sender: 'bot', text: t('chatbot.welcomeMessage') }]);
+      setGroq(newGroq);
+      setMessages([{ sender: 'bot', text: t('chatbot.welcomeMessage') }]);
     } else {
-        setMessages([]);
-        setChat(null);
+      setMessages([]);
+      setGroq(null);
     }
   }, [isOpen, t, lang]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !chat || isLoading) return;
+    if (!input.trim() || !groq || isLoading) return;
 
     const userMessage: Message = { sender: 'user', text: input };
-    setMessages(prev => [...prev, userMessage]);
+    const currentMessages = [...messages, userMessage];
+    setMessages(currentMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      const response = await chat.sendMessageStream({ message: input });
-      
+      const campInfo = 'Actualmente no hay campamentos disponibles. Los campamentos aparecerán cuando sean contratados y añadidos a la plataforma.';
+      const languageMap: Record<string, string> = {
+        es: 'Spanish',
+        en: 'English',
+        va: 'Valencian'
+      };
+      const currentLanguage = languageMap[lang] || 'Spanish';
+
+      const systemInstruction = `Eres Eugenio, el experto guía virtual de vlcCamp. 🥳
+
+Tu objetivo es ayudar a los usuarios con temas relacionados exclusivamente con la plataforma vlcCamp.
+
+SOLO puedes responder preguntas sobre:
+- Cómo registrarse o iniciar sesión.
+- Cómo contratar nuestros servicios.
+- Cómo funcionan las plantillas.
+- Cómo funciona la red social integrada.
+- Funcionalidades, precios y características de la app.
+- Soporte básico sobre el uso de la plataforma.
+
+REGLAS CRÍTICAS:
+1. TUS RESPUESTAS DEBEN SER MUY BREVES (MÁXIMO 2 O 3 FRASES). Evita párrafos largos.
+2. Si el usuario pregunta algo que NO esté directamente relacionado con la aplicación vlcCamp, responde educadamente que solo puedes ayudar con temas relacionados con la app.
+3. NO proporciones información externa no relacionada con vlcCamp.
+4. Mantén siempre un tono Profesional, Claro y Amable.
+5. Debes responder exclusivamente en ${currentLanguage}.
+6. El conocimiento actual sobre campamentos disponibles es: ${campInfo}`;
+
+      const groqMessages = [
+        { role: 'system' as const, content: systemInstruction },
+        ...currentMessages.map(m => ({
+          role: m.sender === 'user' ? 'user' as const : 'assistant' as const,
+          content: m.text
+        }))
+      ];
+
+      const stream = await groq.chat.completions.create({
+        messages: groqMessages,
+        model: "llama-3.3-70b-versatile",
+        stream: true,
+      });
+
       let botResponseText = '';
       setMessages(prev => [...prev, { sender: 'bot', text: '' }]);
-      
-      for await (const chunk of response) {
-        botResponseText += chunk.text;
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        botResponseText += content;
         setMessages(prev => {
-            const newMessages = [...prev];
-            newMessages[newMessages.length - 1].text = botResponseText;
-            return newMessages;
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1].text = botResponseText;
+          return newMessages;
         });
       }
     } catch (error) {
       console.error("Chatbot error:", error);
-      setMessages(prev => [...prev, { sender: 'bot', text: 'Sorry, I encountered an error. Please try again.' }]);
+      setMessages(prev => [...prev, { sender: 'bot', text: 'Lo siento, Eugenio está descansando en este momento. Por favor, inténtalo de nuevo más tarde.' }]);
     } finally {
       setIsLoading(false);
     }
@@ -170,8 +183,8 @@ Always end your responses by encouraging the user to ask more questions.`;
     <div className="fixed bottom-24 right-6 w-full max-w-sm h-[32rem] bg-white rounded-xl shadow-2xl flex flex-col z-50 animate-slide-up-fast">
       <header className="bg-white p-4 rounded-t-xl flex justify-between items-center border-b flex-shrink-0">
         <div className="flex items-center gap-3">
-            <EugenioAvatar />
-            <h3 className="font-bold text-slate-800">{t('chatbot.title')}</h3>
+          <EugenioAvatar />
+          <h3 className="font-bold text-slate-800">{t('chatbot.title')}</h3>
         </div>
         <button onClick={onClose} className="text-slate-500 hover:text-slate-800">
           <CloseIcon />
@@ -189,7 +202,7 @@ Always end your responses by encouraging the user to ask more questions.`;
               {msg.sender === 'user' && <UserAvatar />}
             </div>
           ))}
-           <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
@@ -208,7 +221,7 @@ Always end your responses by encouraging the user to ask more questions.`;
           </button>
         </form>
       </footer>
-       <style>{`
+      <style>{`
           @keyframes slide-up-fast {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }

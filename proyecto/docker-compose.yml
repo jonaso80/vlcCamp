@@ -7,6 +7,7 @@ services:
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
         - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+        - VITE_GROQ_API_KEY=${VITE_GROQ_API_KEY}
         - VITE_API_BASE_URL=http://localhost:4000
     container_name: vlccamp_frontend
     ports:
@@ -26,6 +27,7 @@ services:
         - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
         - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
         - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+        - VITE_GROQ_API_KEY=${VITE_GROQ_API_KEY}
     container_name: vlccamp_social
     ports:
       - "3001:80"
