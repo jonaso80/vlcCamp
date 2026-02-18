@@ -583,11 +583,10 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogin = (nameOrEmail: string): boolean => {
-    // Buscar por nombre O por email (case insensitive)
+  const handleLogin = (email: string): boolean => {
+    // Buscar exclusivamente por email (case insensitive)
     const user = users.find(u =>
-      u.name.toLowerCase() === nameOrEmail.toLowerCase() ||
-      u.email.toLowerCase() === nameOrEmail.toLowerCase()
+      u.email.toLowerCase() === email.toLowerCase()
     );
 
     if (user) {
@@ -608,8 +607,8 @@ const App: React.FC = () => {
       return true;
     }
 
-    console.log('Login fallido:', nameOrEmail);
-    logEvent('login', { status: 'ERROR', error: 'Invalid credentials', nameOrEmail });
+    console.log('Login fallido:', email);
+    logEvent('login', { status: 'ERROR', error: 'Invalid credentials', email });
     return false;
   };
 

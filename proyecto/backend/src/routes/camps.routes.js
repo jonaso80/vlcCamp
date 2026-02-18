@@ -156,8 +156,13 @@ router.get('/my-camp', async (req, res) => {
     const camps = await getCampsByUserEmail(email);
     return res.json(camps);
   } catch (error) {
-    console.error('Error al obtener mis campamentos:', error);
-    res.status(500).json({ error: 'Error al obtener los campamentos' });
+    console.error('❌ [BACKEND] Error al obtener mis campamentos:', error);
+    if (error.stack) console.error(error.stack);
+    res.status(500).json({
+      error: 'Error al obtener los campamentos',
+      details: error.message || error,
+      hint: error.hint
+    });
   }
 });
 
