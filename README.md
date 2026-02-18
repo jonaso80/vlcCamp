@@ -1,226 +1,154 @@
-# VlcCamp
-En VlcCamp nos encargamos de la gestión y coordinación de todas las inscripciones para los campamentos de la Comunidad Valenciana. Nuestro objetivo es facilitar un acceso sencillo y ágil a cada uno de los campamentos disponibles, evitando trámites complicados.
+# 🏕️ VLC Camp - Plataforma de Gestión de Campamentos
 
-Somos conscientes de la importancia que tiene para las familias encontrar la opción que mejor se adapte a sus necesidades. Por ello, hemos desarrollado una plataforma intuitiva que guía paso a paso el proceso de inscripción, garantizando comodidad y eficiencia.
+VLC Camp es una solución integral para la gestión, coordinación y reserva de campamentos en la Comunidad Valenciana. La plataforma conecta a familias, colegios y gestores de campamentos a través de una interfaz intuitiva y potentes herramientas de administración.
 
-Con VlcCamp, el proceso de inscripción es seguro, transparente y rápido.
+---
 
-# Requisitos
+## 🏗️ Arquitectura del Proyecto
 
-## Gestión de usuarios
+El proyecto está diseñado como una aplicación multi-servicio orquestada con **Docker Compose**, compuesta por:
 
-En nuestra página web inicial, tenemos un botón donde podemos iniciar sesión. En este botón podrán iniciar sesión las siguientes personas:
-- Monitores
-- Padres
+1.  **Frontend Principal**: Aplicación React + Vite para el catálogo público y gestión de reservas.
+2.  **Social App**: Una sub-aplicación dedicada a la interacción estilo red social para monitores y padres.
+3.  **Backend API**: Servidor Express.js que maneja la lógica de negocio, envíos de email y persistencia.
+4.  **Base de Datos**: Integración con **Supabase** (PostgreSQL) para perfiles, campamentos, reseñas y tablas auxiliares.
 
-Por un lado, los momitores serán los encargados de colgar fotos, información, videos, etc... De las actividades realizadas en el campamento. Luego, por otro lado, los padres podrán ver dicha información colgada a modo de red social.
+---
 
-## Requisitos no funcionales
+## 🚀 Características Principales
 
-- Interfaz clara y responsive.
-- Cifrado de contraseñas y validación de formularios.
-- Sistema de alto rendimiento
-- Compatible con navegadores modernos y dispositivos moviles.
-- Escalabilidad, posibilidad de añadir nuevos campamentos y funcionalidades en el futuro.
+-   **Catálogo Público**: Visualización de campamentos con detalles, ubicación y disponibilidad.
+-   **Sistema de Reservas**: Flujo de reserva online con confirmación automática vía email.
+-   **Gestión para Propietarios**: Panel para que los gestores de campamentos actualicen información y vean estadísticas.
+-   **Red Social VLC**: Espacio para que monitores compartan actividades y los padres sigan el día a día.
+-   **🤖 Chatbot "Eugenio"**: Asistente inteligente basado en **Groq AI** para resolver dudas frecuentes.
+-   **Seguridad**: Autenticación basada únicamente en **Email/Password** y perfiles vinculados en Supabase.
 
-## Entrevista con ...
+---
 
-¿Qué busca con esta aplicación? → Facilitar a familias y colegios la búsqueda y reserva de campamentos infantiles.
+## 🛠️ Stack Tecnológico
 
-¿Qué funcionalidades son imprescindibles? → Catálogo claro y reservas online.
+-   **Frontend**: React, Vite, Tailwind CSS (en componentes específicos), Context API.
+-   **Backend**: Node.js, Express.js.
+-   **IA**: Groq SDK (Llama 3 / Mixtral) para el chatbot.
+-   **Base de Datos**: Supabase (PostreSQL + RLS).
+-   **Comunicaciones**: Integración con Brevo para el envío de correos transaccionales.
+-   **Despliegue**: Docker, Docker Compose, Nginx.
 
-¿Quiénes serán los principales usuarios? → Familias con hijos y colegios.
+---
 
-¿Qué problemas quieren evitar? → Procesos manuales de reservas, saturación de llamadas telefónicas y pérdida de información.
+## 📦 Instalación y Despliegue
 
-# Propuesta
+La forma más sencilla de ejecutar VLC Camp es utilizando Docker:
+
+### Requisitos Previos
+- Docker y Docker Desktop
+- Un archivo `.env` configurado en la raíz del proyecto.
+
+### Pasos para el despliegue
+1. Clona el repositorio.
+2. Configura las variables de entorno (ver sección abajo).
+3. Ejecuta el comando:
+   ```bash
+   docker compose up --build -d
+   ```
+4. Accede a las aplicaciones:
+   - **Frontend**: http://localhost:3000
+   - **Social App**: http://localhost:3001
+   - **Backend API**: http://localhost:4000
+
+---
+
+## 🔑 Variables de Entorno
+
+Asegúrate de tener un archivo `.env` con las siguientes claves:
+
+```env
+# Supabase
+VITE_SUPABASE_URL=tu_url_supabase
+VITE_SUPABASE_ANON_KEY=tu_anon_key
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+
+# Inteligencia Artificial
+VITE_GROQ_API_KEY=tu_groq_api_key
+
+# Backend y otros
+CORS_ORIGIN=http://localhost:3000
+BREVO_API_KEY=tu_brevo_api_key
+```
+
+---
+
+## 📐 Estructura del repositorio
+
+```mermaid
+graph TD
+    A[vlcCamp Root] --> B[proyecto - Frontend Principal]
+    A --> C[social - Red Social Sub-app]
+    A --> D[backend - Express Server]
+    B --> E[Shared Components]
+    C --> E
+    D --> F[Supabase Database]
+```
+
+---
+
+## 🎨 Prototipos y Diseño
+
+### Propuesta Original
 ![Propuesta](./prototipo.jpeg)
 
-# Mapa de navegación
+### Mapa de Navegación
+![Diagrama VlcCamp](VlcCampDiagrama.drawio.png)
 
-![Diagrama VlcCamp](./VlcCampDiagrama.drawio.png)
+### 🖥️ Frames — Versión Escritorio
+````carousel
+![Inicio](./figmaEscritorio/inicio.png)
+<!-- slide -->
+![Info campamento](./figmaEscritorio/info-camp.png)
+<!-- slide -->
+![Iniciar sesión](./figmaEscritorio/iniciar-sesion.png)
+<!-- slide -->
+![Registro](./figmaEscritorio/crear-cuenta.png)
+<!-- slide -->
+![Verificación](./figmaEscritorio/verifica.png)
+<!-- slide -->
+![Albergue](./figmaEscritorio/albuergue.png)
+<!-- slide -->
+![Formulario](./figmaEscritorio/formulario.png)
+<!-- slide -->
+![Resumen del formulario](./figmaEscritorio/resumen.png)
+<!-- slide -->
+![Mi cuenta](./figmaEscritorio/mi-cuenta.png)
+<!-- slide -->
+![Info personal](./figmaEscritorio/info-personal-mi-cuenta.png)
+<!-- slide -->
+![Campamentos favoritos](./figmaEscritorio/campamentos-fav-mi-cuenta.png)
+````
 
-# Prototipo de Figma
-
-Enlace al prototipo de móvil: https://www.figma.com/proto/XMqgzuWBg2S19xbsDGbOCy/Proyecto?node-id=221-1588&t=quyk3KLtDdKv9P6h-1
-
-Enlace al prototipo de escritorio: https://www.figma.com/proto/XMqgzuWBg2S19xbsDGbOCy/Proyecto?page-id=0%3A1&node-id=1912&viewport=414%2C240%2C0.32&t=RbwfNc04QjxXuMfg-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=19%3A12
-
-En los dos casos, al entrar a la web, encontramos una pantalla de inicio en la que se exponen los diferentes campamentos con los que VlcCamp trabaja. Podemos seleccionar cualquier campamento, y podemos ver mas información del mismo, siendo necesario identificarse con usuario y contraseña, o creando una nueva cuenta en caso de no tener aún.
-
-Dentro de cada página de los campamentos, tenemos la posibilidad de seleccionar un rango de fechas en las que se puede hacer una reserva en dicho campamentos. Después, se redirigirá a un formulario en el que se rellenarán los datos necesarios para la reserva. Al terminar, enviaremos el formulario y se nos mostrará un resumen de los datos.
-Además de esto, contamos con una pantalla en la que podemos ver información sobre nuestra cuenta y buscar y añadir nuestros campamentos favoritos. 
-
-## 🖥️ Explicación de Frames — Versión Escritorio
-
-> En esta sección encontrarás las distintas pantallas que componen la versión de escritorio.
-
----
-
-### 🏕️ Pantalla de inicio  
-<div align="center">
-  <img src="./figmaEscritorio/inicio.png" alt="Inicio" width="700px">
-</div>
-
-En esta pantalla encontramos la **presentación principal** junto con la lista de campamentos con los que trabajamos.
-
----
-
-### ℹ️ Información del campamento  
-<div align="center">
-  <img src="./figmaEscritorio/info-camp.png" alt="Info campamento" width="700px">
-</div>
-
-Aquí vemos una **superposición con información detallada** sobre cada campamento y un botón que lleva a su sitio web.
-
----
-
-### 🔐 Iniciar sesión  
-<div align="center">
-  <img src="./figmaEscritorio/iniciar-sesion.png" alt="Iniciar sesión" width="700px">
-</div>
-
-Pantalla de **inicio de sesión básica** para acceder a la web.
-
----
-
-### 📝 Registro de cuenta  
-<div align="center">
-  <img src="./figmaEscritorio/crear-cuenta.png" alt="Registro" width="700px">
-</div>
-
-Formulario de **registro básico** para crear una cuenta y acceder al sitio.
+### 📱 Frames — Versión Móvil
+````carousel
+![Inicio móvil](./figmaMovil/inicio.png)
+<!-- slide -->
+![Ubicación](./figmaMovil/ubi.png)
+<!-- slide -->
+![Más información](./figmaMovil/masInfo.png)
+<!-- slide -->
+![Formulario](./figmaMovil/form.png)
+<!-- slide -->
+![Resumen](./figmaMovil/resumen.png)
+<!-- slide -->
+![Cuenta](./figmaMovil/cuenta.png)
+<!-- slide -->
+![Info cuenta](./figmaMovil/infoCuenta.png)
+````
 
 ---
 
-### ✅ Verificación  
-<div align="center">
-  <img src="./figmaEscritorio/verifica.png" alt="Verificación" width="700px">
-</div>
-
-Función de **verificación de cuenta registrada**.
+### Enlaces a Figma
+- **Escritorio**: [Ver prototipo](https://www.figma.com/proto/XMqgzuWBg2S19xbsDGbOCy/Proyecto?page-id=0%3A1&node-id=1912&viewport=414%2C240%2C0.32&t=RbwfNc04QjxXuMfg-1&scaling=scale-down&content-scaling=fixed&starting-point-node-id=19%3A12)
+- **Móvil**: [Ver prototipo](https://www.figma.com/proto/XMqgzuWBg2S19xbsDGbOCy/Proyecto?node-id=221-1588&t=quyk3KLtDdKv9P6h-1)
 
 ---
 
-### 🏡 Página del albergue  
-<div align="center">
-  <img src="./figmaEscritorio/albuergue.png" alt="Albergue" width="700px">
-</div>
-
-Muestra **información detallada** sobre el albergue o campamento seleccionado.
-
----
-
-### 📄 Formulario de reserva  
-<div align="center">
-  <img src="./figmaEscritorio/formulario.png" alt="Formulario" width="700px">
-</div>
-
-Formulario para **registrar una reserva** en el campamento elegido.
-
----
-
-### 📋 Resumen del formulario  
-<div align="center">
-  <img src="./figmaEscritorio/resumen.png" alt="Resumen del formulario" width="700px">
-</div>
-
-Pantalla que muestra un **resumen del formulario completado**.
-
----
-
-### 👤 Mi cuenta  
-<div align="center">
-  <img src="./figmaEscritorio/mi-cuenta.png" alt="Mi cuenta" width="700px">
-</div>
-
-Sección donde se muestra **información general de la cuenta del usuario**.
-
----
-
-### 🧾 Información personal  
-<div align="center">
-  <img src="./figmaEscritorio/info-personal-mi-cuenta.png" alt="Info personal" width="700px">
-</div>
-
-Pantalla con los **datos personales del usuario**.
-
----
-
-### ⭐ Campamentos favoritos  
-<div align="center">
-  <img src="./figmaEscritorio/campamentos-fav-mi-cuenta.png" alt="Campamentos favoritos" width="700px">
-</div>
-
-Lista de **campamentos favoritos**, donde el usuario puede añadir o gestionar los suyos.
-
----
-
-## 📱 Explicación de Frames — Versión Móvil
-
-> A continuación, se muestran las pantallas adaptadas para la versión móvil del sitio.
-
----
-
-### 🏕️ Pantalla de inicio  
-<div align="center">
-  <img src="./figmaMovil/inicio.png" alt="Inicio móvil" width="350px">
-</div>
-
-Página inicial con una breve **presentación** y los diferentes campamentos disponibles.
-
----
-
-### 📍 Ubicación del campamento  
-<div align="center">
-  <img src="./figmaMovil/ubi.png" alt="Ubicación" width="350px">
-</div>
-
-Superposición que **muestra la ubicación** del campamento seleccionado.
-
----
-
-### ℹ️ Más información  
-<div align="center">
-  <img src="./figmaMovil/masInfo.png" alt="Más información" width="350px">
-</div>
-
-Muestra **más información** del campamento y un **calendario interactivo** para elegir fechas.
-
----
-
-### 📝 Formulario de inscripción  
-<div align="center">
-  <img src="./figmaMovil/form.png" alt="Formulario" width="350px">
-</div>
-
-Formulario para **inscribir a los hijos** en el campamento deseado.
-
----
-
-### 📋 Resumen  
-<div align="center">
-  <img src="./figmaMovil/resumen.png" alt="Resumen" width="350px">
-</div>
-
-Resumen de la **información completada en el formulario**.
-
----
-
-### 👤 Cuenta de usuario  
-<div align="center">
-  <img src="./figmaMovil/cuenta.png" alt="Cuenta">
-</div>
-
-Es necesario **crear una cuenta o iniciar sesión** en caso de que ya exista una.
-
----
-
-### ⚙️ Información de la cuenta  
-<div align="center">
-  <img src="./figmaMovil/infoCuenta.png" alt="Info cuenta">
-</div>
-
-Ventana con opciones para **editar los datos de la cuenta**, **añadir favoritos** y **visualizar campamentos guardados**.
-
----
+Developed with ❤️ by the VLC Camp Team.

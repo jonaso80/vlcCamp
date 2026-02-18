@@ -7,12 +7,19 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copiar todo el código (incluyendo components)
-COPY . .
+# Copiar solo el package.json de la subcarpeta social para cache
+COPY social/package*.json ./social/
 
-# Moverse al directorio social e instalar sus dependencias
+# Instalar dependencias de social
 WORKDIR /app/social
 RUN npm install
+
+# Retroceder al root y copiar todo el código restante (incluyendo components)
+WORKDIR /app
+COPY . .
+
+# Volver a social para el build
+WORKDIR /app/social
 
 # Argumentos de build para variables de entorno (al final para optimizar cache)
 ARG VITE_SUPABASE_URL

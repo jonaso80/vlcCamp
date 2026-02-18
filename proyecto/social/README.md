@@ -1,20 +1,12 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 📱 VLC Camp - App Social
 
-# Run and deploy your AI Studio app
+Esta es la sub-aplicación dedicada a la red social de VLC Camp, donde monitores y padres pueden interactuar.
 
-This contains everything you need to run your app locally.
+### 📖 Notas de Desarrollo
+Esta aplicación se despliega como un servicio independiente pero está integrada en la arquitectura global del proyecto.
 
-View your app in AI Studio: https://ai.studio/apps/drive/14CV9O-rRlCUn9XwWUXD6_vCBpwdO2J9V
+Para instrucciones sobre cómo configurar las variables de entorno y ejecutar este servicio, consulta el archivo:
+👉 **[README principal del proyecto (raíz)](../../README.md)**
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
+*VLC Camp Team*
