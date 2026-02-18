@@ -39,7 +39,7 @@ export async function getCampsByUserEmail(email) {
   const { data, error } = await supabase
     .from('camps')
     .select('*')
-    .or(`contact_email.eq.${email},user_email.eq.${email}`)
+    .or(`contact_email.eq."${email}",user_email.eq."${email}"`)
     .order('created_at', { ascending: false });
 
   if (error) {

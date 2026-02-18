@@ -84,7 +84,7 @@ const LoginForm: React.FC<{
   onGoogleCredentialResponse: (response: any) => void;
 }> = ({ onSwitchToSignup, onLogin, onGoogleCredentialResponse }) => {
   const { t } = useTranslations();
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -106,7 +106,7 @@ const LoginForm: React.FC<{
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const success = onLogin(name);
+    const success = onLogin(email);
     if (!success) {
       setError(t('auth.loginFailed'));
     }
@@ -116,7 +116,7 @@ const LoginForm: React.FC<{
       <Logo className="mb-4" />
       <h2 className="text-3xl font-bold text-slate-800 mb-6">{t('auth.loginTitle')}</h2>
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <AuthInput type="text" placeholder={t('auth.username')} required value={name} onChange={(e) => setName(e.target.value)} />
+        <AuthInput type="email" placeholder={t('auth.email')} required value={email} onChange={(e) => setEmail(e.target.value)} />
         <AuthInput type="password" placeholder={t('auth.password')} required value={password} onChange={(e) => setPassword(e.target.value)} />
         {error && <p className="text-sm text-red-500">{error}</p>}
         <button type="submit" className="w-full bg-[#8EB8BA] text-white py-3 mt-2 rounded-lg hover:bg-teal-500 transition font-semibold text-base">{t('auth.login')}</button>

@@ -184,8 +184,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogin = (name: string): boolean => {
-    const user = users.find(u => u.name.toLowerCase() === name.toLowerCase());
+  const handleLogin = (email: string): boolean => {
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (user) {
       setIsAuthenticated(true);
       setCurrentUser(user);
@@ -206,7 +206,7 @@ const App: React.FC = () => {
       }
       return true;
     }
-    logEvent('login', { status: 'ERROR', error: 'Invalid credentials', name });
+    logEvent('login', { status: 'ERROR', error: 'Invalid credentials', email });
     return false;
   };
 
