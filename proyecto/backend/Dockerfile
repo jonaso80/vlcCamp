@@ -12,7 +12,9 @@ ENV PORT=4000
 
 EXPOSE 4000
 
-CMD ["node", "src/index.js"]
+# Con el volumen montado (./backend:/usr/src/app), node_modules puede quedar vacío.
+# Ejecutar npm install al arrancar asegura que las dependencias estén instaladas.
+CMD ["sh", "-c", "npm install && node src/index.js"]
 
 
 
