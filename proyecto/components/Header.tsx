@@ -154,9 +154,7 @@ const Header: React.FC<HeaderProps> = ({
                 {!isAuthenticated
                   ? 'Mi cuenta'
                   : userCamp
-                    ? currentView === 'my-camp-profile'
-                      ? 'Cuenta campamento'
-                      : 'Cuenta personal'
+                    ? 'Cuenta camp'
                     : currentUser?.name ?? 'Mi cuenta'}
               </span>
             </button>
