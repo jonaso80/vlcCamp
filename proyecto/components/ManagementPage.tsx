@@ -46,7 +46,6 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ isAuthenticated, curren
     { id: 'plantilla-publicidad', label: 'Plantilla de publicidad', icon: '📢', onClick: onPlantillaPublicidadClick },
     { id: 'datos-extra', label: 'Datos extra', icon: '📋', onClick: onDatosExtraClick },
     { id: 'tablas', label: 'Tablas', icon: '📊', onClick: onTablasClick },
-    { id: 'usuarios', label: 'Usuarios', icon: '👥', onClick: () => { } },
   ] as const;
 
   return (

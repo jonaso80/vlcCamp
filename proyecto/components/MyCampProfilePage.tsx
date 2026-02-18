@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from '../context/LanguageContext';
 import { MyCamp } from '../types';
 
 interface MyCampProfilePageProps {
@@ -6,7 +7,19 @@ interface MyCampProfilePageProps {
   onBackToAccount: () => void;
 }
 
+const PLAN_KEYS = ['monthly', 'semester', 'annual'] as const;
+
 const MyCampProfilePage: React.FC<MyCampProfilePageProps> = ({ camp, onBackToAccount }) => {
+  const { t } = useTranslations();
+  const planLabelMap: Record<(typeof PLAN_KEYS)[number], string> = {
+    monthly: t('campRegistration.plans.monthly'),
+    semester: t('campRegistration.plans.semester'),
+    annual: t('campRegistration.plans.annual'),
+  };
+  const planLabel = camp.plan && PLAN_KEYS.includes(camp.plan as (typeof PLAN_KEYS)[number])
+    ? planLabelMap[camp.plan as (typeof PLAN_KEYS)[number]]
+    : (camp.plan || 'No asignado');
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 animate-fade-in">
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-[#b6e0de]/30 overflow-hidden">
@@ -32,7 +45,7 @@ const MyCampProfilePage: React.FC<MyCampProfilePageProps> = ({ camp, onBackToAcc
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-[#b6e0de]/20 text-[#2E4053] rounded-full text-sm font-semibold border border-[#b6e0de]/40">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20" /><path d="m4.93 4.93 14.14 14.14" /><path d="M2 12h20" /><path d="m4.93 19.07 14.14-14.14" /></svg>
-              Plan: <span className="capitalize">{camp.plan || 'No asignado'}</span>
+              Plan: <span>{planLabel}</span>
             </div>
           </div>
 

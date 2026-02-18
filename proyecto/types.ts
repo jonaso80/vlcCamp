@@ -53,6 +53,7 @@ export type View =
   | 'plantilla-loading'
   | 'publicidad'
   | 'camp-public'
+  | 'camp-reserva'
   | 'management-datos-extra'
   | 'management-tablas';
 

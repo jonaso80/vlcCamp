@@ -6,9 +6,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000
 interface CampPublicPageProps {
   campId: number;
   onBack: () => void;
+  onReservarClick?: () => void;
 }
 
-const CampPublicPage: React.FC<CampPublicPageProps> = ({ campId, onBack }) => {
+const CampPublicPage: React.FC<CampPublicPageProps> = ({ campId, onBack, onReservarClick }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [camp, setCamp] = useState<any>(null);
@@ -82,19 +83,6 @@ const CampPublicPage: React.FC<CampPublicPageProps> = ({ campId, onBack }) => {
 
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: palette.background }}>
-      {/* Navbar Overlay */}
-      <nav className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center transition-all bg-gradient-to-b from-black/50 to-transparent">
-        <button
-          onClick={onBack}
-          className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-bold transition-all"
-        >
-          ← Volver
-        </button>
-        <div className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-          {camp.location || 'Campamento'}
-        </div>
-      </nav>
-
       {/* Hero Header */}
       <header className="relative h-[50vh] min-h-[400px]">
         {coverImage ? (
@@ -224,6 +212,8 @@ const CampPublicPage: React.FC<CampPublicPageProps> = ({ campId, onBack }) => {
       {/* Footer CTA */}
       <div className="sticky bottom-0 p-4 bg-white/80 backdrop-blur-lg border-t border-slate-200 flex justify-center shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
         <button
+          type="button"
+          onClick={onReservarClick}
           className="w-full max-w-md py-4 rounded-xl font-bold text-white text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
           style={{ backgroundColor: palette.primary }}
         >

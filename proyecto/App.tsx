@@ -23,6 +23,7 @@ import ManagementPage from './components/ManagementPage';
 import PlantillaLoadingPage from './components/plantilla/PlantillaLoadingPage';
 import PublicidadPage from './components/plantilla/PublicidadPage';
 import CampPublicPage from './components/plantilla/CampPublicPage';
+import CampReservaPage from './components/plantilla/CampReservaPage';
 import DatosExtraPage from './components/management/DatosExtraPage';
 import TablasPage from './components/management/TablasPage';
 import CampSelectorPage from './components/management/CampSelectorPage';
@@ -46,6 +47,7 @@ const ROUTES = {
   plantilla: '/plantilla',
   publicidad: '/publicidad',
   camp: (id: number) => `/camp/${id}`,
+  campReserva: (id: number) => `/camp/${id}/reserva`,
 } as const;
 
 function pathToView(path: string): { view: View; campId?: number } | null {
@@ -59,6 +61,11 @@ function pathToView(path: string): { view: View; campId?: number } | null {
   if (path === ROUTES.gestionTablas) return { view: 'management-tablas' };
   if (path === ROUTES.plantilla) return { view: 'plantilla-loading' };
   if (path === ROUTES.publicidad) return { view: 'publicidad' };
+  const campReservaMatch = path.match(/^\/camp\/(\d+)\/reserva$/);
+  if (campReservaMatch) {
+    const id = parseInt(campReservaMatch[1], 10);
+    if (!Number.isNaN(id)) return { view: 'camp-reserva', campId: id };
+  }
   const campMatch = path.match(/^\/camp\/(\d+)/);
   if (campMatch) {
     const id = parseInt(campMatch[1], 10);
@@ -80,6 +87,7 @@ function viewToPath(view: View, campPublicId?: number | null): string {
     case 'plantilla-loading': return ROUTES.plantilla;
     case 'publicidad': return ROUTES.publicidad;
     case 'camp-public': return campPublicId != null ? ROUTES.camp(campPublicId) : ROUTES.home;
+    case 'camp-reserva': return campPublicId != null ? ROUTES.campReserva(campPublicId) : ROUTES.home;
     default: return ROUTES.home;
   }
 }
@@ -340,6 +348,22 @@ const App: React.FC = () => {
     setCampPublicId(null);
     setCurrentView('home');
     window.history.pushState(null, '', ROUTES.home);
+  };
+
+  const handleReservaClick = (campId: number) => {
+    setCampPublicId(campId);
+    setCurrentView('camp-reserva');
+    window.history.pushState(null, '', ROUTES.campReserva(campId));
+  };
+
+  const handleBackFromCampReserva = () => {
+    if (campPublicId !== null) {
+      setCurrentView('camp-public');
+      window.history.pushState(null, '', ROUTES.camp(campPublicId));
+    } else {
+      setCurrentView('home');
+      window.history.pushState(null, '', ROUTES.home);
+    }
   };
 
   const handleDatosExtraClick = () => {
@@ -899,7 +923,11 @@ const App: React.FC = () => {
         ) : null;
       case 'camp-public':
         return campPublicId !== null ? (
-          <CampPublicPage campId={campPublicId} onBack={handleBackFromCampPublic} />
+          <CampPublicPage campId={campPublicId} onBack={handleBackFromCampPublic} onReservarClick={() => handleReservaClick(campPublicId)} />
+        ) : null;
+      case 'camp-reserva':
+        return campPublicId !== null ? (
+          <CampReservaPage campId={campPublicId} onBack={handleBackFromCampReserva} />
         ) : null;
       case 'home':
       default:
