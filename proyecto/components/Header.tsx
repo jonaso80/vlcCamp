@@ -56,9 +56,11 @@ const Header: React.FC<HeaderProps> = ({
   const isActive = (path: string) => currentPath === path || (path === HEADER_ROUTES.gestion && (currentPath.startsWith('/gestion')));
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const { t, setLang, lang } = useTranslations();
 
   const languages = {
@@ -77,6 +79,17 @@ const Header: React.FC<HeaderProps> = ({
   }, []);
 
   useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false);
@@ -88,6 +101,8 @@ const Header: React.FC<HeaderProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const handleUserIconClick = () => {
     if (isAuthenticated) {
@@ -113,7 +128,29 @@ const Header: React.FC<HeaderProps> = ({
         <a href={HEADER_ROUTES.home} onClick={(e) => { e.preventDefault(); onHomeClick(); }} className="cursor-pointer block">
           <Logo width={40} height={40} />
         </a>
-        <nav className="flex items-center space-x-4 md:space-x-6 text-slate-600">
+
+        {/* Hamburger: solo móvil */}
+        <div className="md:hidden flex items-center" ref={mobileMenuRef}>
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            className="p-2 rounded-lg text-slate-600 hover:text-[#8EB8BA] hover:bg-white/50 transition-colors"
+            aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          >
+            {isMobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Nav desktop: oculto en móvil */}
+        <nav className="hidden md:flex items-center space-x-4 md:space-x-6 text-slate-600">
           <a
             href={HEADER_ROUTES.home}
             onClick={(e) => { e.preventDefault(); onHomeClick(); }}
@@ -230,6 +267,135 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </nav>
       </div>
+
+      {/* Menú móvil: overlay + panel lateral */}
+      {isMobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            onClick={closeMobileMenu}
+            aria-hidden="true"
+          />
+          <div
+            data-mobile-menu-panel
+            className="fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-white/95 backdrop-blur-lg shadow-xl z-50 md:hidden flex flex-col border-l border-slate-200 animate-slide-in-right"
+          >
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+              <span className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Menú</span>
+              <button
+                type="button"
+                onClick={closeMobileMenu}
+                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+                aria-label="Cerrar menú"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex flex-col p-4 gap-1 text-slate-600 overflow-y-auto">
+              <a
+                href={HEADER_ROUTES.home}
+                onClick={(e) => { e.preventDefault(); onHomeClick(); closeMobileMenu(); }}
+                className={`rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.home) ? 'text-[#8EB8BA] bg-[#def1f0]' : 'hover:text-[#8EB8BA] hover:bg-white/70'}`}
+              >
+                Inicio
+              </a>
+              {isAuthenticated && (
+                <a
+                  href={HEADER_ROUTES.gestion}
+                  onClick={(e) => { e.preventDefault(); onManagementClick(); closeMobileMenu(); }}
+                  className={`rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.gestion) ? 'text-[#8EB8BA] bg-[#def1f0]' : 'hover:text-[#8EB8BA] hover:bg-white/70'}`}
+                >
+                  Gestión
+                </a>
+              )}
+              <a
+                href={HEADER_ROUTES.comunidad}
+                onClick={(e) => { e.preventDefault(); onCommunityClick(); closeMobileMenu(); }}
+                className={`rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.comunidad) ? 'text-[#8EB8BA] bg-[#def1f0]' : 'hover:text-[#8EB8BA] hover:bg-white/70'}`}
+              >
+                Comunidad
+              </a>
+              <a
+                href={HEADER_ROUTES.contacto}
+                onClick={(e) => { e.preventDefault(); onContactClick(); closeMobileMenu(); }}
+                className={`rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide ${isActive(HEADER_ROUTES.contacto) ? 'text-[#8EB8BA] bg-[#def1f0]' : 'hover:text-[#8EB8BA] hover:bg-white/70'}`}
+              >
+                Contacto
+              </a>
+
+              <div className="border-t border-slate-200 my-3 pt-3">
+                <p className="px-4 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">Idioma</p>
+                <div className="flex gap-2 px-4 py-2">
+                  {(Object.keys(languages) as Array<keyof typeof languages>).map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => { handleLangChange(key); closeMobileMenu(); }}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium ${lang === key ? 'bg-[#8EB8BA] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                    >
+                      {languages[key]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-slate-200 pt-3">
+                <p className="px-4 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wide">Cuenta</p>
+                {!isAuthenticated ? (
+                  <button
+                    onClick={() => { onAuthClick(); closeMobileMenu(); }}
+                    className="w-full text-left rounded-lg px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-[#def1f0] hover:text-[#8EB8BA]"
+                  >
+                    Mi cuenta
+                  </button>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    {userCamp && (
+                      <>
+                        <a
+                          href={HEADER_ROUTES.cuentaPersonal}
+                          onClick={(e) => { e.preventDefault(); onAccountClick(); closeMobileMenu(); }}
+                          className={`rounded-lg px-4 py-3 text-sm flex items-center gap-2 ${currentView === 'account' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}
+                        >
+                          <span className="inline-flex [&_svg]:h-4 [&_svg]:w-4"><UserIcon /></span> Cuenta personal
+                        </a>
+                        <a
+                          href={HEADER_ROUTES.cuentaCamp}
+                          onClick={(e) => { e.preventDefault(); onMyCampClick(); closeMobileMenu(); }}
+                          className={`rounded-lg px-4 py-3 text-sm flex items-center gap-2 ${currentView === 'my-camp-profile' ? 'bg-[#def1f0] text-[#2E4053] font-semibold' : 'text-slate-700 hover:bg-[#def1f0]'}`}
+                        >
+                          <span className="w-4 h-4 flex items-center justify-center text-base">🏕</span>
+                          <span className="truncate">{userCamp.name}</span>
+                        </a>
+                        {hasMultipleCamps && (
+                          <button
+                            onClick={() => { onSwitchCamp?.(); closeMobileMenu(); }}
+                            className="w-full text-left rounded-lg px-4 py-3 text-xs text-[#8EB8BA] hover:bg-[#def1f0] font-semibold italic"
+                          >
+                            ↻ Cambiar campamento
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {!userCamp && (
+                      <button onClick={() => { onAccountClick(); closeMobileMenu(); }} className="w-full text-left rounded-lg px-4 py-3 text-sm text-slate-700 hover:bg-[#def1f0] flex items-center gap-2">
+                        <EditIcon /> {t('header.editAccount')}
+                      </button>
+                    )}
+                    <button onClick={() => { onSwitchAccount(); closeMobileMenu(); }} className="w-full text-left rounded-lg px-4 py-3 text-sm text-slate-700 hover:bg-[#def1f0] flex items-center gap-2">
+                      <SwitchUserIcon /> {t('header.switchAccount')}
+                    </button>
+                    <button onClick={() => { onLogout(); closeMobileMenu(); }} className="w-full text-left rounded-lg px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                      <LogoutIcon /> {t('header.logout')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </nav>
+          </div>
+        </>
+      )}
     </header>
   );
 };
@@ -242,6 +408,13 @@ style.innerHTML = `
   }
   .animate-fade-in-fast {
     animation: fade-in-fast 0.2s ease-out forwards;
+  }
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .animate-slide-in-right {
+    animation: slide-in-right 0.25s ease-out forwards;
   }
 `;
 document.head.appendChild(style);
